@@ -171,11 +171,11 @@ Okres danych Sublime: <input type="date" id="subFrom"> – <input type="date" id
 
 <section>
 <h2>Kampanie paid</h2>
-<p class="sub">Dane Sublime za <span id="sub_range">—</span> (nie zmieniają się z przełącznikiem okresu). POAS = zysk brutto ÷ wydatek; powyżej 1 kampania zarabia na siebie.</p>
+<p class="sub">Dane Sublime za <span id="sub_range">—</span> (nie zmieniają się z przełącznikiem okresu). Zysk z Sublime przeliczony na netto (÷ 1,23), żeby zestawić go z wydatkami, które są netto. POAS netto = zysk netto ÷ wydatek; powyżej 1 kampania zarabia na siebie.</p>
 <div class="grid">
 <div class="card"><div class="lab">Wydatek</div><div class="big" id="p_spend">—</div></div>
 <div class="card"><div class="lab">Przychód (Sublime)</div><div class="big" id="p_rev">—</div><div class="note">ROAS <span id="p_roas">—</span></div></div>
-<div class="card"><div class="lab">Zysk brutto (Sublime)</div><div class="big" id="p_gp">—</div><div class="note">POAS <span id="p_poas">—</span></div></div>
+<div class="card"><div class="lab">Zysk netto (Sublime ÷ 1,23)</div><div class="big" id="p_gp">—</div><div class="note">POAS netto <span id="p_poas">—</span></div></div>
 <div class="card"><div class="lab">Wydane bez zamówień w Sublime</div><div class="big" id="p_zero">—</div><div class="note"><span id="p_zero_n">—</span> kampanii</div></div>
 </div>
 </section>
@@ -199,7 +199,8 @@ Okres danych Sublime: <input type="date" id="subFrom"> – <input type="date" id
 <li><b>Rabat od ceny regularnej</b> = 1 − GMV ÷ suma aktualnych cen regularnych.</li>
 <li><b>Transakcja</b> = jedna sztuka (wiersz eksportu); zamówienie może mieć kilka.</li>
 <li>Liczymy tylko transakcje opłacone 17.11–1.12, bez anulowanych i zwróconych.</li>
-<li><b>Rekomendacja</b>: „Podkręć budżet” przy POAS ≥ 3; „Utrzymaj” przy POAS 1–3; „Ogranicz” przy POAS &lt; 1 z zamówieniami; „Sprawdź atrybucję”, gdy Sublime nie widzi zamówień, a ROAS platformy ≥ 3 albo GMV grupy ≥ 10× wydatku; „Tnij lub zmień” przy wydatku ≥ 150 zł bez zamówień; poniżej tego „Za mało danych”.</li>
+<li><b>Zysk netto</b> = „Gross Profit” z Sublime ÷ 1,23 (VAT). <b>POAS netto</b> = zysk netto ÷ wydatek (netto).</li>
+<li><b>Rekomendacja</b>: „Podkręć budżet” przy POAS netto ≥ 3; „Utrzymaj” przy POAS netto 1–3; „Ogranicz” przy POAS netto &lt; 1 z zamówieniami; „Sprawdź atrybucję”, gdy Sublime nie widzi zamówień, a ROAS platformy ≥ 3 albo GMV grupy ≥ 10× wydatku; „Tnij lub zmień” przy wydatku ≥ 150 zł bez zamówień; poniżej tego „Za mało danych”.</li>
 <li>Grupy Togo i Meble Bauhaus obejmują też produkty spoza listy ID: Togo = nazwa zawiera „Togo” lub dostawca Boketto; Meble Bauhaus = dostawca Bauhaus Design.</li>
 <li>Kanał wg nazwy: [PMAX] / PLA / SW = Google, nazwy z datą (112026_…) = Meta. Grupa kampanii wg nazwy (np. „Lampy Bolia” → Bolia Lampy); pozostałe = ogólne / always-on.</li>
 <li>Dane kupujących (e-mail, imię, telefon, adres) nie są wczytywane do strony.</li>
@@ -211,6 +212,7 @@ Okres danych Sublime: <input type="date" id="subFrom"> – <input type="date" id
 
 <script>
 const EMBED = /*__DATA__*/null;
+const VAT = 1.23;
 const CFG = {TARGET_GMV: 550000, TARGET_GR: 19, START: '2026-11-17', DAYS: 15, URO_END: '2026-11-23', END: '2026-12-01'};
 const NF0 = new Intl.NumberFormat('pl-PL', {maximumFractionDigits: 0});
 const NF1 = new Intl.NumberFormat('pl-PL', {minimumFractionDigits: 1, maximumFractionDigits: 1});
@@ -429,22 +431,22 @@ function render() {
 
   // paid
   set('sub_range', subFrom.slice(8, 10) + '.' + subFrom.slice(5, 7) + '–' + subTo.slice(8, 10) + '.' + subTo.slice(5, 7));
-  const spend = sum(ads, c => c.spend), rev = sum(ads, c => c.revenue), gpr = sum(ads, c => c.gross_profit); const zero = ads.filter(c => !(c.orders > 0));
+  const spend = sum(ads, c => c.spend), rev = sum(ads, c => c.revenue), gpr = sum(ads, c => c.gross_profit) / VAT; const zero = ads.filter(c => !(c.orders > 0));
   set('p_spend', F.short(spend)); set('p_rev', F.short(rev)); set('p_roas', F.x(spend ? rev / spend : null)); set('p_gp', F.short(gpr));
   set('p_poas', F.x(spend ? gpr / spend : null), spend && gpr / spend >= 1 ? 'ok' : 'bad'); set('p_zero', F.short(sum(zero, c => c.spend))); set('p_zero_n', F.n(zero.length));
   const subRows = tx.filter(r => r.counted && r.day >= subFrom && r.day <= subTo);
   const ggmv = g => { if (!gids.has(g)) return null; const s = new Set(gids.get(g).map(x => String(x.product_id))); return r2(sum(subRows.filter(r => inG(r, g, s)), r => r.gmv)); };
   const gp2 = [...groupBy(ads, c => c.group)].map(([group, cs]) => {
-    const sp = r2(sum(cs, c => c.spend)), o = sum(cs, c => c.orders), poas = sp ? r2(sum(cs, c => c.gross_profit) / sp) : null, gm = ggmv(group);
+    const sp = r2(sum(cs, c => c.spend)), o = sum(cs, c => c.orders), poas = sp ? r2(sum(cs, c => c.gross_profit) / VAT / sp) : null, gm = ggmv(group);
     const gx = gm != null && sp ? r1(gm / sp) : null;
     return {group, spend: sp, orders: o, revenue: r2(sum(cs, c => c.revenue)), poas, group_gmv: gm, gx, rec: rec(sp, o, poas, Math.max(0, ...cs.map(c => c.platform_roas || 0)), gx)};
   });
   table('gpaid', [{k: 'group', t: 'Grupa'}, {k: 'spend', t: 'Wydatek', f: F.zl}, {k: 'orders', t: 'Zam. (Sublime)', f: F.n}, {k: 'revenue', t: 'Przychód', f: F.zl},
-    {k: 'poas', t: 'POAS', f: F.x, cls: poasCls}, {k: 'group_gmv', t: 'GMV grupy', f: F.zl}, {k: 'gx', t: 'GMV grupy ÷ wydatek', f: F.x}, {k: 'rec', t: 'Rekomendacja', l: 1, chip: 1}], gp2, 'spend');
-  const camps = ads.map(c => { const poas = c.spend ? r2(c.gross_profit / c.spend) : null; const gm = ggmv(c.group); const gx = gm != null && c.spend ? r1(gm / c.spend) : null;
-    return {...c, poas, platform_roas: c.platform_roas || null, rec: rec(c.spend, c.orders, poas, c.platform_roas, gx)}; });
+    {k: 'poas', t: 'POAS netto', f: F.x, cls: poasCls}, {k: 'group_gmv', t: 'GMV grupy', f: F.zl}, {k: 'gx', t: 'GMV grupy ÷ wydatek', f: F.x}, {k: 'rec', t: 'Rekomendacja', l: 1, chip: 1}], gp2, 'spend');
+  const camps = ads.map(c => { const net = r2(c.gross_profit / VAT); const poas = c.spend ? r2(net / c.spend) : null; const gm = ggmv(c.group); const gx = gm != null && c.spend ? r1(gm / c.spend) : null;
+    return {...c, net_profit: net, poas, platform_roas: c.platform_roas || null, rec: rec(c.spend, c.orders, poas, c.platform_roas, gx)}; });
   table('camps', [{k: 'campaign', t: 'Kampania'}, {k: 'channel', t: 'Kanał', l: 1}, {k: 'group', t: 'Grupa', l: 1}, {k: 'spend', t: 'Wydatek', f: F.zl}, {k: 'orders', t: 'Zam.', f: F.n},
-    {k: 'revenue', t: 'Przychód', f: F.zl}, {k: 'gross_profit', t: 'Zysk brutto', f: F.zl}, {k: 'poas', t: 'POAS', f: F.x, cls: poasCls},
+    {k: 'revenue', t: 'Przychód', f: F.zl}, {k: 'net_profit', t: 'Zysk netto', f: F.zl}, {k: 'poas', t: 'POAS netto', f: F.x, cls: poasCls},
     {k: 'platform_roas', t: 'ROAS platformy', f: F.x}, {k: 'rec', t: 'Rekomendacja', l: 1, chip: 1}], camps, 'spend');
 
   $('foot').textContent = `Źródła: transakcje – ${D.srcTx || '—'}; kampanie – ${D.srcAds || '—'}; grupy produktów – ${D.srcGroups || '—'}.`;
