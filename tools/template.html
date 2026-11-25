@@ -158,7 +158,7 @@ Okres danych Sublime: <input type="date" id="subFrom"> – <input type="date" id
 
 <section class="card">
 <h2>Dostawcy</h2>
-<p class="sub">Wybrany okres. Kliknij nagłówek, żeby posortować. „Realizacja celu” zawsze liczona za całe 17.11–1.12 (niezależnie od przełącznika okresu); zielona = na lub ponad równe tempo dzienne, czerwona = poniżej. Cele dostawców są celowo lekko przeszacowane, więc ich suma przekracza cel całkowity.</p>
+<p class="sub">Wybrany okres. Kliknij nagłówek, żeby posortować. „Realizacja celu” zawsze liczona za całe 17.11–1.12 (niezależnie od przełącznika okresu); zielona = na lub ponad równe tempo dzienne, czerwona = poniżej.</p>
 <div class="tw"><table id="vendors"></table></div>
 </section>
 
@@ -306,9 +306,8 @@ const grCls = v => v == null ? '' : v >= CFG.TARGET_GR ? 'ok' : 'bad';
 const poasCls = r => r.poas >= 1 ? 'ok' : r.orders > 0 ? 'bad' : '';
 
 // ---------- cele GMV dostawców (17.11–1.12) ----------
-// Celowo lekko przeszacowane – suma może przekraczać cel całkowity.
-const VENDOR_TARGETS = [['Boketto', 180000], ['Bauhaus Design', 80000], ['Zieta', 50000], ['Przetwory', 70000], ['Antyki Galicja', 20000],
-  ['Malwina Konopacka', 10000], ['Artera', 13000], ['TAMO', 15000], ['Carpets & More', 15000], ['366 Concept', 15000], ['Bolia', 20000], ['Renovator', 10000]];
+const VENDOR_TARGETS = [['Boketto', 180000], ['Bauhaus Design', 80000], ['Zieta', 50000], ['Przetwory', 60000], ['Antyki Galicja', 20000],
+  ['Malwina Konopacka', 10000], ['Artera', 13000], ['TAMO', 15000], ['Carpets & More', 15000], ['366 Concept', 15000], ['Bolia', 20000], ['Renovator', 15000]];
 const normV = s => String(s || '').toLowerCase().replace(/[^a-z0-9ąćęłńóśźż]/g, '');
 const targetOf = vendor => { const n = normV(vendor); const m = VENDOR_TARGETS.find(([k]) => n.startsWith(normV(k))); return m || null; };
 
