@@ -88,7 +88,7 @@ details li{margin:4px 0}
 
 <header>
 <h1>Yestersen · Urodziny + Black Week 2026</h1>
-<p class="lede">Obie akcje razem: <b id="l_gmv">—</b> GMV, czyli <b id="l_pct">—</b> celu 550 tys. zł, przy gain rate <b id="l_gr">—</b> (cel 19%). Dane transakcji do <b id="l_last">—</b>.</p>
+<p class="lede">Obie akcje razem: <b id="l_gmv">—</b> GMV, czyli <b id="l_pct">—</b> celu 550 tys. zł, przy gain rate <b id="l_gr">—</b> (cel 20%). Dane transakcji do <b id="l_last">—</b>.</p>
 <div class="tabs" id="tabs">
 <button class="tab on" data-p="Razem">Razem 17.11–1.12</button>
 <button class="tab" data-p="Urodziny">Urodziny 17–23.11</button>
@@ -116,9 +116,9 @@ Okres danych Sublime: <input type="date" id="subFrom"> – <input type="date" id
 <div class="note"><span id="t_pct">—</span> celu po <span id="t_days">—</span> z 15 dni (tempo równe: <span id="t_pace">—</span>). Brakuje <span id="t_left">—</span>, czyli <span id="t_need">—</span> dziennie do końca.</div>
 </div>
 <div>
-<div class="lab">Gain rate vs 19%</div>
+<div class="lab">Gain rate vs 20%</div>
 <div class="big" id="t_gr">—</div>
-<div class="note">Gain <span id="t_gain">—</span> przy celu 19% GMV.</div>
+<div class="note">Gain <span id="t_gain">—</span> przy celu 20% GMV.</div>
 </div>
 </div>
 </section>
@@ -128,7 +128,7 @@ Okres danych Sublime: <input type="date" id="subFrom"> – <input type="date" id
 <div class="grid" style="margin-top:10px">
 <div class="card"><div class="lab">GMV (cena produktu po rabatach)</div><div class="big" id="k_gmv">—</div></div>
 <div class="card"><div class="lab">Gain</div><div class="big" id="k_gain">—</div></div>
-<div class="card"><div class="lab">Gain rate (cel 19%)</div><div class="big" id="k_gr">—</div></div>
+<div class="card"><div class="lab">Gain rate (cel 20%)</div><div class="big" id="k_gr">—</div></div>
 <div class="card"><div class="lab">Transakcje (sztuki)</div><div class="big" id="k_tx">—</div><div class="note">w <span id="k_orders">—</span> zamówieniach, AOV <span id="k_aov">—</span></div><div class="note" id="k_samples_wrap">Pominięte próbniki tkanin (mikrokonwersje): <span id="k_samples">—</span></div></div>
 <div class="card"><div class="lab">Rabat od ceny regularnej</div><div class="big" id="k_disc">—</div></div>
 </div>
@@ -143,7 +143,7 @@ Okres danych Sublime: <input type="date" id="subFrom"> – <input type="date" id
 
 <section class="card">
 <h2>Sprzedaż per kategoria</h2>
-<p class="sub">Wybrany okres. Przełącz miarę: GMV, liczba transakcji (sztuk) albo gain. Kliknij kategorię, żeby zejść poziom niżej. Pasek: udział w wybranej mierze; przy „Razem” podzielony na Urodziny i Black Week. Plakietka: gain rate (zielona ≥ 19%).</p>
+<p class="sub">Wybrany okres. Przełącz miarę: GMV, liczba transakcji (sztuk) albo gain. Kliknij kategorię, żeby zejść poziom niżej. Pasek: udział w wybranej mierze; przy „Razem” podzielony na Urodziny i Black Week. Plakietka: gain rate (zielona ≥ 20%).</p>
 <div class="catbar">
 <div class="seg" id="catmetric"><button data-m="gmv" class="on">GMV</button><button data-m="tx">Transakcje</button><button data-m="gain">Gain</button></div>
 <div class="seg" id="catlevel"><button data-l="1" class="on">Poziom 1</button><button data-l="2">Poziom 2</button><button data-l="3">Poziom 3</button></div>
@@ -216,7 +216,7 @@ const EMBED = {"tx": [{"transaction_id": "3305", "order_id": "2495", "product_id
 const VAT = 1.23;
 // Próbniki / wzorniki tkanin = mikrokonwersje, nie liczymy ich do sprzedaży.
 const SAMPLE_RE = /wzornik|próbnik|probnik/i;
-const CFG = {TARGET_GMV: 550000, TARGET_GR: 19, START: '2026-11-17', DAYS: 15, URO_END: '2026-11-23', END: '2026-12-01'};
+const CFG = {TARGET_GMV: 550000, TARGET_GR: 20, START: '2026-11-17', DAYS: 15, URO_END: '2026-11-23', END: '2026-12-01'};
 const NF0 = new Intl.NumberFormat('pl-PL', {maximumFractionDigits: 0});
 const NF1 = new Intl.NumberFormat('pl-PL', {minimumFractionDigits: 1, maximumFractionDigits: 1});
 const F = {
