@@ -142,15 +142,16 @@ Okres danych Sublime: <input type="date" id="subFrom"> – <input type="date" id
 
 <section class="card">
 <h2>Sprzedaż per kategoria</h2>
-<p class="sub">Wybrany okres. Kliknij kategorię, żeby zejść poziom niżej. Pasek: udział w GMV; przy „Razem” podzielony na Urodziny i Black Week. Plakietka: gain rate (zielona ≥ 19%).</p>
+<p class="sub">Wybrany okres. Przełącz miarę: GMV, liczba transakcji (sztuk) albo gain. Kliknij kategorię, żeby zejść poziom niżej. Pasek: udział w wybranej mierze; przy „Razem” podzielony na Urodziny i Black Week. Plakietka: gain rate (zielona ≥ 19%).</p>
 <div class="catbar">
+<div class="seg" id="catmetric"><button data-m="gmv" class="on">GMV</button><button data-m="tx">Transakcje</button><button data-m="gain">Gain</button></div>
 <div class="seg" id="catlevel"><button data-l="1" class="on">Poziom 1</button><button data-l="2">Poziom 2</button><button data-l="3">Poziom 3</button></div>
 <span class="crumbs" id="crumbs"></span>
 </div>
 <div class="strip" id="strip"></div>
 <div class="skey" id="skey"></div>
 <div class="legend" id="catleg"><span><i class="sw" style="background:var(--c1)"></i>Urodziny</span><span><i class="sw" style="background:var(--c0)"></i>Black Week</span></div>
-<div class="chead"><div>Kategoria</div><div>GMV</div><div>GMV · udział</div><div>Gain rate</div></div>
+<div class="chead"><div>Kategoria</div><div id="ch_bar">GMV</div><div id="ch_val">GMV · udział</div><div>Gain rate</div></div>
 <div id="cats"></div>
 <button class="more" id="catmore" hidden></button>
 </section>
@@ -417,20 +418,23 @@ function render() {
 }
 
 // ---------- kategorie ----------
-const CAT = {level: 1, path: [], all: false};
+const CAT = {level: 1, path: [], all: false, metric: 'gmv'};
+const MET = {gmv: {t: 'GMV', f: v => F.short(v)}, tx: {t: 'Transakcje', f: v => F.n(v) + ' szt.'}, gain: {t: 'Gain', f: v => F.short(v)}};
 const CK = ['category', 'category2', 'category3'];
 const PAL = ['#4f8a6b', '#8a5a9e', '#3f8fa6', '#a6913f', '#b3412f', '#6d7f99', '#9e6b5a'];
 function renderCats(rows) {
   document.querySelectorAll('#catlevel button').forEach(b => b.classList.toggle('on', Number(b.dataset.l) === CAT.level));
   const scoped = rows.filter(r => CAT.path.every((v, i) => r[CK[i]] === v));
   const key = CK[CAT.level - 1];
-  const total = sum(scoped, r => r.gmv);
+  const M = CAT.metric, MT = MET[M];
+  const total = M === 'tx' ? scoped.length : sum(scoped, r => r[M]);
+  document.querySelectorAll('#catmetric button').forEach(b => b.classList.toggle('on', b.dataset.m === M));
+  $('ch_bar').textContent = MT.t; $('ch_val').textContent = MT.t + ' · udział';
   const list = [...groupBy(scoped, r => CAT.level === 1 ? r.category : CK.slice(0, CAT.level).map(k => r[k]).join('\u0001'))].map(([k, rs]) => {
     const parts = k.split('\u0001');
     return {name: parts[parts.length - 1], parents: parts.slice(CAT.path.length, -1), full: parts, ...agg(rs),
-      uro: sum(rs.filter(r => r.period === 'Urodziny'), r => r.gmv), bw: sum(rs.filter(r => r.period === 'Black Week'), r => r.gmv),
-      share: total ? r1(sum(rs, r => r.gmv) / total * 100) : 0};
-  }).sort((a, b) => b.gmv - a.gmv);
+      uroA: agg(rs.filter(r => r.period === 'Urodziny')), bwA: agg(rs.filter(r => r.period === 'Black Week'))};
+  }).map(c => ({...c, m: c[M], uro: c.uroA[M], bw: c.bwA[M], share: total ? r1(c[M] / total * 100) : 0})).sort((a, b) => b.m - a.m || b.gmv - a.gmv);
 
   // okruszki
   const cr = $('crumbs'); cr.replaceChildren();
@@ -442,15 +446,15 @@ function renderCats(rows) {
 
   // pasek udziałów
   const top = list.slice(0, 7), rest = list.slice(7);
-  const segs = top.map((c, i) => ({name: c.name, gmv: c.gmv, share: c.share, col: PAL[i]}));
-  if (rest.length) segs.push({name: `Pozostałe (${rest.length})`, gmv: sum(rest, c => c.gmv), share: r1(sum(rest, c => c.share)), col: '#cfcbc1'});
-  $('strip').replaceChildren(...segs.map(s => { const d = document.createElement('div'); d.style.flex = String(Math.max(s.gmv, 0.0001)); d.style.background = s.col;
-    d.onmousemove = ev => showTip(ev, `${s.name}: ${F.zl(s.gmv)} (${F.pct(s.share)})`); d.onmouseleave = hideTip; return d; }));
+  const segs = top.map((c, i) => ({name: c.name, m: c.m, share: c.share, col: PAL[i]}));
+  if (rest.length) segs.push({name: `Pozostałe (${rest.length})`, m: sum(rest, c => c.m), share: r1(sum(rest, c => c.share)), col: '#cfcbc1'});
+  $('strip').replaceChildren(...segs.map(s => { const d = document.createElement('div'); d.style.flex = String(Math.max(s.m, 0.0001)); d.style.background = s.col;
+    d.onmousemove = ev => showTip(ev, `${s.name}: ${MT.f(s.m)} (${F.pct(s.share)})`); d.onmouseleave = hideTip; return d; }));
   $('skey').replaceChildren(...segs.map(s => { const sp = document.createElement('span'); const i = document.createElement('i'); i.className = 'sw'; i.style.background = s.col; sp.append(i, `${s.name} ${F.pct(s.share)}`); return sp; }));
 
   // wiersze
   const shown = CAT.all ? list : list.slice(0, 15);
-  const mx = Math.max(1, ...list.map(c => c.gmv));
+  const mx = Math.max(1, ...list.map(c => c.m));
   const both = PERIOD === 'Razem';
   $('catleg').hidden = !both;
   $('cats').replaceChildren(...(shown.length ? shown.map(c => {
@@ -460,12 +464,12 @@ function renderCats(rows) {
     if (c.parents.length) { const s = document.createElement('small'); s.textContent = c.parents.join(' › '); nm.append(s); }
     const tr = document.createElement('div'); tr.className = 'track';
     const add = (v, col) => { if (v <= 0) return; const x = document.createElement('div'); x.style.width = (v / mx * 100) + '%'; x.style.background = col; tr.append(x); };
-    if (both) { add(c.uro, 'var(--c1)'); add(c.bw, 'var(--c0)'); } else add(c.gmv, PERIOD === 'Urodziny' ? 'var(--c1)' : 'var(--c0)');
-    const v = document.createElement('div'); v.className = 'val'; v.textContent = F.short(c.gmv);
-    const sm = document.createElement('small'); sm.textContent = `${F.pct(c.share)} · ${c.tx} szt.`; v.append(sm);
+    if (both) { add(c.uro, 'var(--c1)'); add(c.bw, 'var(--c0)'); } else add(c.m, PERIOD === 'Urodziny' ? 'var(--c1)' : 'var(--c0)');
+    const v = document.createElement('div'); v.className = 'val'; v.textContent = MT.f(c.m);
+    const sm = document.createElement('small'); sm.textContent = F.pct(c.share) + ' · ' + (M === 'gmv' ? `${c.tx} szt.` : M === 'tx' ? F.short(c.gmv) : `GMV ${F.short(c.gmv)}`); v.append(sm);
     const g = document.createElement('span'); g.className = 'grc ' + grCls(c.gain_rate); g.textContent = F.pct(c.gain_rate);
     row.append(nm, tr, v, g);
-    row.onmousemove = ev => showTip(ev, `${c.full.join(' › ')} · GMV ${F.zl(c.gmv)}${both ? ` (Urodziny ${F.zl(c.uro)}, BW ${F.zl(c.bw)})` : ''} · gain ${F.zl(c.gain)} · rabat ${F.pct(c.discount)} · ${c.orders} zam.`);
+    row.onmousemove = ev => showTip(ev, `${c.full.join(' › ')} · GMV ${F.zl(c.gmv)} · ${c.tx} szt. · gain ${F.zl(c.gain)}${both ? ` · ${MT.t}: Urodziny ${MT.f(c.uro)}, BW ${MT.f(c.bw)}` : ''} · rabat ${F.pct(c.discount)}`);
     row.onmouseleave = hideTip;
     if (CAT.level < 3) row.onclick = () => { hideTip(); CAT.path = c.full.slice(); CAT.level = CAT.path.length + 1; CAT.all = false; render(); };
     return row;
@@ -474,6 +478,7 @@ function renderCats(rows) {
   more.textContent = CAT.all ? 'Pokaż top 15' : `Pokaż wszystkie (${list.length})`;
   more.onclick = () => { CAT.all = !CAT.all; render(); };
 }
+document.querySelectorAll('#catmetric button').forEach(b => b.onclick = () => { CAT.metric = b.dataset.m; render(); });
 document.querySelectorAll('#catlevel button').forEach(b => b.onclick = () => {
   const l = Number(b.dataset.l); CAT.level = l; CAT.path = CAT.path.slice(0, l - 1); CAT.all = false; render();
 });
