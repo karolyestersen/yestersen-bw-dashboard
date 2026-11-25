@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yestersen – Urodziny & Black Week 2026</title>
+<style>
+:root{--fg:#1d1d1b;--muted:#6b6a66;--bg:#f6f4ef;--panel:#fff;--line:#e4e1d9;--ok:#2f7d4f;--bad:#b3412f;--warn:#a86a12;--c0:#2b5c8a;--c1:#c7843b;--grid:#eeebe4}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1200px;margin:0 auto;padding:24px 16px 60px;display:flex;flex-direction:column;gap:24px}
+h1{font:400 30px/1.2 Georgia,"Times New Roman",serif;margin:0}
+h2{font-size:17px;font-weight:600;margin:0 0 4px}
+.sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+.lede{margin:8px 0 0;max-width:75ch}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.tab{font:inherit;font-size:13px;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer}
+.tab.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;min-width:0}
+.lab{font-size:12.5px;color:var(--muted)}
+.big{font:400 28px/1.2 Georgia,"Times New Roman",serif;font-variant-numeric:tabular-nums;margin:4px 0;white-space:nowrap}
+.note{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+.bar{height:10px;border-radius:5px;background:var(--grid);position:relative;overflow:hidden;margin:10px 0}
+.bar span{position:absolute;left:0;top:0;bottom:0;background:var(--c0)}
+.bar i{position:absolute;top:0;bottom:0;width:2px;background:var(--fg)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.cols{display:flex;align-items:flex-end;gap:4px;height:220px;padding-top:10px;position:relative}
+.col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;min-width:0;cursor:default}
+.col .b{width:100%;border-radius:3px 3px 0 0;min-height:1px}
+.col .v{font-size:10.5px;color:var(--muted);margin-bottom:3px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.xl{display:flex;gap:4px;border-top:1px solid #cfcbc1;padding-top:4px}
+.xl div{flex:1;text-align:center;font-size:11px;color:var(--muted);min-width:0;overflow:hidden}
+.legend{display:flex;gap:16px;font-size:12.5px;color:var(--muted);margin-bottom:6px}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.tip{position:fixed;pointer-events:none;background:#fff;border:1px solid var(--line);box-shadow:0 4px 16px rgba(0,0,0,.12);border-radius:8px;padding:6px 10px;font-size:12.5px;white-space:nowrap;z-index:10}
+.hrow{display:grid;grid-template-columns:minmax(100px,28%) 1fr auto;gap:10px;align-items:center;font-size:13px;margin:5px 0}
+.hrow .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hrow .b{height:14px;border-radius:3px;background:var(--c0)}
+.hrow .v{font-variant-numeric:tabular-nums;white-space:nowrap}
+.catbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{font:inherit;font-size:12.5px;padding:5px 12px;border:0;background:var(--panel);color:var(--fg);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--fg);color:var(--bg)}
+.crumbs{font-size:13px;color:var(--muted)}
+.crumbs a{color:var(--c0);cursor:pointer;text-decoration:underline}
+.strip{display:flex;height:26px;border-radius:6px;overflow:hidden;margin:4px 0 6px}
+.strip div{min-width:2px;border-right:2px solid var(--panel)}
+.strip div:last-child{border-right:0}
+.skey{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted);margin-bottom:16px}
+.crow{display:grid;grid-template-columns:minmax(120px,26%) 1fr 150px 74px;gap:12px;align-items:center;padding:7px 4px;border-bottom:1px solid var(--line);font-size:13px}
+.crow.click{cursor:pointer}.crow.click:hover{background:#faf8f4}
+.crow .nm{min-width:0}.crow .nm b{font-weight:500;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crow .nm small{color:var(--muted);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px}
+.crow .track{display:flex;height:16px;border-radius:3px;overflow:hidden}
+.crow .val{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.crow .val small{color:var(--muted);display:block;font-size:11.5px}
+.grc{justify-self:end;font-size:12px;padding:2px 8px;border-radius:999px;font-variant-numeric:tabular-nums;border:1px solid currentColor;white-space:nowrap}
+.chead{display:grid;grid-template-columns:minmax(120px,26%) 1fr 150px 74px;gap:12px;font-size:11.5px;color:var(--muted);padding:0 4px 4px;border-bottom:1px solid var(--line)}
+.chead div:nth-child(3),.chead div:nth-child(4){text-align:right}
+.more{font:inherit;font-size:12.5px;margin-top:10px;background:none;border:0;color:var(--c0);cursor:pointer;text-decoration:underline;padding:0}
+@media (max-width:560px){.crow,.chead{grid-template-columns:minmax(100px,38%) 1fr 64px}.crow .track,.chead div:nth-child(2){display:none}}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th{text-align:right;font-weight:600;color:var(--muted);padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
+th:hover{color:var(--fg)}
+td{text-align:right;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left;white-space:normal;min-width:150px}
+td.l,th.l{text-align:left}
+.chip{display:inline-block;padding:2px 9px;border-radius:999px;border:1px solid currentColor;font-size:12px}
+.upload{border:2px dashed var(--line);border-radius:10px;padding:16px;background:var(--panel);font-size:13px}
+.upload.drag{border-color:var(--c0);background:#eef3f8}
+.upload button,.upload label.btn{font:inherit;font-size:13px;padding:6px 12px;border-radius:6px;border:1px solid var(--fg);background:var(--fg);color:#fff;cursor:pointer;display:inline-block}
+.upload .ghost{background:transparent;color:var(--fg)}
+.upload input[type=date]{font:inherit;font-size:13px;padding:3px 6px;border:1px solid var(--line);border-radius:6px}
+.status{margin-top:8px;color:var(--muted)}
+details{font-size:13px;color:var(--muted)}
+details li{margin:4px 0}
+.empty{color:var(--muted);font-size:13px;padding:8px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+<h1>Yestersen · Urodziny + Black Week 2026</h1>
+<p class="lede">Obie akcje razem: <b id="l_gmv">—</b> GMV, czyli <b id="l_pct">—</b> celu 0,5 mln zł, przy gain rate <b id="l_gr">—</b> (cel 19%). Dane transakcji do <b id="l_last">—</b>.</p>
+<div class="tabs" id="tabs">
+<button class="tab on" data-p="Razem">Razem 17.11–1.12</button>
+<button class="tab" data-p="Urodziny">Urodziny 17–23.11</button>
+<button class="tab" data-p="Black Week">Black Week 24.11–1.12</button>
+</div>
+</header>
+
+<section class="upload" id="upload">
+<b>Aktualizacja danych</b> – przeciągnij tu pliki CSV albo
+<label class="btn">wybierz pliki<input type="file" id="files" accept=".csv,text/csv" multiple hidden></label>
+<button class="ghost" id="reset">przywróć dane z pliku</button>
+<div class="note" style="margin-top:6px">Strona sama rozpozna: eksport transakcji z CMS, eksport kampanii z Sublime i arkusz „Ads IDs”. Możesz wrzucić jeden, dwa albo wszystkie trzy. Pliki są przetwarzane tylko w Twojej przeglądarce i nigdzie nie są wysyłane.
+Okres danych Sublime: <input type="date" id="subFrom"> – <input type="date" id="subTo"></div>
+<div class="status" id="status"></div>
+</section>
+
+<section class="card">
+<h2>Cel na obie akcje</h2>
+<p class="sub">17.11–1.12, niezależnie od wybranego okresu. Pionowa kreska = gdzie powinniśmy być przy równym tempie dziennym.</p>
+<div class="two">
+<div>
+<div class="lab">GMV vs 500 tys. zł</div>
+<div class="big" id="t_gmv">—</div>
+<div class="bar"><span id="t_fill"></span><i id="t_mark"></i></div>
+<div class="note"><span id="t_pct">—</span> celu po <span id="t_days">—</span> z 15 dni (tempo równe: <span id="t_pace">—</span>). Brakuje <span id="t_left">—</span>, czyli <span id="t_need">—</span> dziennie do końca.</div>
+</div>
+<div>
+<div class="lab">Gain rate vs 19%</div>
+<div class="big" id="t_gr">—</div>
+<div class="note">Gain <span id="t_gain">—</span> przy celu 19% GMV.</div>
+</div>
+</div>
+</section>
+
+<section>
+<h2>Wybrany okres: <span id="k_period">—</span></h2>
+<div class="grid" style="margin-top:10px">
+<div class="card"><div class="lab">GMV (cena produktu po rabatach)</div><div class="big" id="k_gmv">—</div></div>
+<div class="card"><div class="lab">Gain</div><div class="big" id="k_gain">—</div></div>
+<div class="card"><div class="lab">Gain rate (cel 19%)</div><div class="big" id="k_gr">—</div></div>
+<div class="card"><div class="lab">Transakcje (sztuki)</div><div class="big" id="k_tx">—</div><div class="note">w <span id="k_orders">—</span> zamówieniach, AOV <span id="k_aov">—</span></div></div>
+<div class="card"><div class="lab">Rabat od ceny regularnej</div><div class="big" id="k_disc">—</div></div>
+</div>
+</section>
+
+<section class="card">
+<h2>GMV dzień po dniu</h2>
+<div class="legend"><span><i class="sw" style="background:var(--c1)"></i>Urodziny</span><span><i class="sw" style="background:var(--c0)"></i>Black Week</span></div>
+<div class="cols" id="daily"></div>
+<div class="xl" id="daily_x"></div>
+</section>
+
+<section class="card">
+<h2>Sprzedaż per kategoria</h2>
+<p class="sub">Wybrany okres. Kliknij kategorię, żeby zejść poziom niżej. Pasek: udział w GMV; przy „Razem” podzielony na Urodziny i Black Week. Plakietka: gain rate (zielona ≥ 19%).</p>
+<div class="catbar">
+<div class="seg" id="catlevel"><button data-l="1" class="on">Poziom 1</button><button data-l="2">Poziom 2</button><button data-l="3">Poziom 3</button></div>
+<span class="crumbs" id="crumbs"></span>
+</div>
+<div class="strip" id="strip"></div>
+<div class="skey" id="skey"></div>
+<div class="legend" id="catleg"><span><i class="sw" style="background:var(--c1)"></i>Urodziny</span><span><i class="sw" style="background:var(--c0)"></i>Black Week</span></div>
+<div class="chead"><div>Kategoria</div><div>GMV</div><div>GMV · udział</div><div>Gain rate</div></div>
+<div id="cats"></div>
+<button class="more" id="catmore" hidden></button>
+</section>
+
+<section class="card">
+<h2>Dostawcy</h2>
+<p class="sub">Wybrany okres. Kliknij nagłówek, żeby posortować.</p>
+<div class="tw"><table id="vendors"></table></div>
+</section>
+
+<section class="card">
+<h2>Sprzedaż per grupa produktów z kampanii</h2>
+<p class="sub">Transakcja trafia do grupy, jeśli jej ID produktu jest na liście tej grupy. Produkt może być w kilku grupach (np. BW ogólna), więc wiersze nie sumują się do całości.</p>
+<div class="tw"><table id="groups"></table></div>
+</section>
+
+<section>
+<h2>Kampanie paid</h2>
+<p class="sub">Dane Sublime za <span id="sub_range">—</span> (nie zmieniają się z przełącznikiem okresu). POAS = zysk brutto ÷ wydatek; powyżej 1 kampania zarabia na siebie.</p>
+<div class="grid">
+<div class="card"><div class="lab">Wydatek</div><div class="big" id="p_spend">—</div></div>
+<div class="card"><div class="lab">Przychód (Sublime)</div><div class="big" id="p_rev">—</div><div class="note">ROAS <span id="p_roas">—</span></div></div>
+<div class="card"><div class="lab">Zysk brutto (Sublime)</div><div class="big" id="p_gp">—</div><div class="note">POAS <span id="p_poas">—</span></div></div>
+<div class="card"><div class="lab">Wydane bez zamówień w Sublime</div><div class="big" id="p_zero">—</div><div class="note"><span id="p_zero_n">—</span> kampanii</div></div>
+</div>
+</section>
+
+<section class="card">
+<h2>Gdzie podkręcać budżet – per grupa produktów</h2>
+<p class="sub">Wszystkie kampanie danej grupy (Google + Meta) razem. „GMV grupy” to cała sprzedaż produktów z grupy w okresie Sublime (też organiczna) – pomaga ocenić kampanie, którym Sublime nie przypisuje zamówień.</p>
+<div class="tw"><table id="gpaid"></table></div>
+</section>
+
+<section class="card">
+<h2>Kampanie paid – szczegóły</h2>
+<p class="sub">Kliknij nagłówek, żeby posortować.</p>
+<div class="tw"><table id="camps"></table></div>
+</section>
+
+<details><summary>Definicje i założenia</summary>
+<ul>
+<li><b>GMV</b> – cena produktu zapłacona przez klienta (po promocji i kodzie rabatowym), bez dostawy.</li>
+<li><b>Gain</b> – „Total gain” z CMS (prowizja minus rabat z kodu). <b>Gain rate</b> = gain ÷ GMV.</li>
+<li><b>Rabat od ceny regularnej</b> = 1 − GMV ÷ suma aktualnych cen regularnych.</li>
+<li><b>Transakcja</b> = jedna sztuka (wiersz eksportu); zamówienie może mieć kilka.</li>
+<li>Liczymy tylko transakcje opłacone 17.11–1.12, bez anulowanych i zwróconych.</li>
+<li><b>Rekomendacja</b>: „Podkręć budżet” przy POAS ≥ 3; „Utrzymaj” przy POAS 1–3; „Ogranicz” przy POAS &lt; 1 z zamówieniami; „Sprawdź atrybucję”, gdy Sublime nie widzi zamówień, a ROAS platformy ≥ 3 albo GMV grupy ≥ 10× wydatku; „Tnij lub zmień” przy wydatku ≥ 150 zł bez zamówień; poniżej tego „Za mało danych”.</li>
+<li>Kanał wg nazwy: [PMAX] / PLA / SW = Google, nazwy z datą (112026_…) = Meta. Grupa kampanii wg nazwy (np. „Lampy Bolia” → Bolia Lampy); pozostałe = ogólne / always-on.</li>
+<li>Dane kupujących (e-mail, imię, telefon, adres) nie są wczytywane do strony.</li>
+</ul>
+</details>
+<div class="note" id="foot"></div>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+const EMBED = /*__DATA__*/null;
+const CFG = {TARGET_GMV: 500000, TARGET_GR: 19, START: '2026-11-17', DAYS: 15, URO_END: '2026-11-23', END: '2026-12-01'};
+const NF0 = new Intl.NumberFormat('pl-PL', {maximumFractionDigits: 0});
+const NF1 = new Intl.NumberFormat('pl-PL', {minimumFractionDigits: 1, maximumFractionDigits: 1});
+const F = {
+  zl: v => v == null || isNaN(v) ? '—' : NF0.format(v) + ' zł',
+  short: v => v == null || isNaN(v) ? '—' : Math.abs(v) >= 1e6 ? NF1.format(v / 1e6) + ' mln zł' : Math.abs(v) >= 1e4 ? NF1.format(v / 1e3) + ' tys. zł' : NF0.format(v) + ' zł',
+  pct: v => v == null || isNaN(v) ? '—' : NF1.format(v) + '%',
+  n: v => v == null || isNaN(v) ? '—' : NF0.format(v),
+  x: v => v == null || isNaN(v) ? '—' : NF1.format(v) + '×',
+  id: v => v == null ? '—' : String(v),
+};
+const sum = (a, f) => a.reduce((s, r) => s + (f(r) || 0), 0);
+const $ = id => document.getElementById(id);
+const set = (id, txt, cls) => { const el = $(id); if (!el) return; el.textContent = txt; el.classList.remove('ok', 'bad', 'warn'); if (cls) el.classList.add(cls); };
+
+// ---------- parsowanie CSV ----------
+function parseCSV(text) {
+  text = text.replace(/^﻿/, '');
+  const head = text.slice(0, text.indexOf('\n') > 0 ? text.indexOf('\n') : text.length);
+  const d = (head.split(';').length > head.split(',').length) ? ';' : ',';
+  const rows = []; let row = [], f = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"') q = true;
+    else if (c === d) { row.push(f); f = ''; }
+    else if (c === '\n') { row.push(f); rows.push(row); row = []; f = ''; }
+    else if (c !== '\r') f += c;
+  }
+  if (f !== '' || row.length) { row.push(f); rows.push(row); }
+  return rows.filter(r => r.some(x => x.trim() !== ''));
+}
+const objs = rows => { const h = rows[0].map(x => x.trim()); return rows.slice(1).map(r => Object.fromEntries(h.map((k, i) => [k, r[i] ?? '']))); };
+const num = s => { const v = parseFloat(String(s ?? '').replace(/[\s ]/g, '').replace(',', '.')); return isNaN(v) ? 0 : v; };
+const r2 = v => Math.round(v * 100) / 100, r1 = v => Math.round(v * 10) / 10;
+const periodOf = day => day >= CFG.START && day <= CFG.URO_END ? 'Urodziny' : day > CFG.URO_END && day <= CFG.END ? 'Black Week' : null;
+const stripCat = s => (s || '').split('|')[0].replace(/\s*\[\d+\]\s*$/, '').trim() || 'Brak';
+
+function normTx(rows) {
+  return objs(rows).filter(r => (r['Transaction ID'] || '').trim()).map(r => {
+    const day = (r['Order paid date'] || '').trim().slice(0, 10);
+    const status = (r['Transaction status'] || '').trim();
+    const returned = !!(r['Transaction return completed date'] || '').trim();
+    const price = num(r['Product price']), reg = num(r['Product current regular price']);
+    const p = periodOf(day);
+    return {transaction_id: r['Transaction ID'].trim(), order_id: (r['Order ID'] || '').trim(), product_id: (r['Product ID'] || '').trim(),
+      product: (r['Product name'] || '').trim(), vendor: (r['Vendor name'] || '').trim(), day, period: p || 'Poza okresem',
+      counted: !/CANCEL|RETURN|REFUND|REJECT/i.test(status) && !returned && !!p, status,
+      gmv: r2(price), regular_price: r2(reg > 0 ? reg : price), gain: r2(num(r['Total gain'])),
+      category: stripCat(r['Product category level 1']), category2: stripCat(r['Product category level 2']).replace(/^Brak$/, '(bez podkategorii)'),
+      category3: stripCat(r['Product category level 3']).replace(/^Brak$/, '(bez podkategorii)'), classification: (r['Product classification'] || '').trim()};
+  });
+}
+function normGroups(rows) {
+  const out = [], seen = new Set();
+  rows.slice(1).forEach(r => {
+    const g = (r[0] || '').trim(); if (!g || r.length < 2) return;
+    (r[1] || '').split(/[\s,;]+/).filter(x => /^\d+$/.test(x)).forEach(id => { const k = g + '|' + id; if (!seen.has(k)) { seen.add(k); out.push({group: g, product_id: id}); } });
+  });
+  return out;
+}
+const CAMPAIGN_GROUP = [[/lampy.designerskie/i, 'Lampy designerskie'], [/bauhaus/i, 'Meble Bauhaus'], [/togo/i, 'Togo'], [/dywany/i, 'Dywany'],
+  [/bolia/i, 'Bolia Lampy'], [/artera/i, 'Artera'], [/zieta/i, 'Zieta'], [/plakaty/i, 'Plakaty'], [/black week og/i, 'BW ogolna'],
+  [/prezenty/i, 'Prezenty'], [/krzes/i, 'Krzesła i fotele'], [/przechowywanie/i, 'Przechowywanie'], [/sto[lł]y/i, 'Stoły']];
+const channel = n => n.startsWith('[PMAX]') ? 'Google PMax' : n.startsWith('PLA') ? 'Google Shopping' : n.startsWith('SW') ? 'Google Search' : /^\d{6}_/.test(n) ? 'Meta' : 'Inne';
+function normAds(rows) {
+  return objs(rows).filter(r => (r['Campaign Name'] || '').trim()).map(r => {
+    const name = r['Campaign Name'].trim();
+    const g = (CAMPAIGN_GROUP.find(([re]) => re.test(name)) || [null, 'Ogólna / always-on'])[1];
+    return {campaign: name, channel: channel(name), group: g, spend: r2(num(r['Ad Spend'])), revenue: r2(num(r['Revenue'])),
+      gross_profit: r2(num(r['Gross Profit'])), orders: num(r['Orders']), platform_roas: r2(num(r['Platform ROAS']))};
+  });
+}
+
+// ---------- stan ----------
+let D = JSON.parse(JSON.stringify(EMBED));
+let PERIOD = 'Razem';
+const LS = 'ys_bw26_v2';
+try { const s = JSON.parse(localStorage.getItem(LS) || 'null'); if (s) D = Object.assign(D, s); } catch (e) {}
+const save = () => { try { localStorage.setItem(LS, JSON.stringify(D)); } catch (e) {} };
+
+// ---------- obliczenia ----------
+const agg = rows => {
+  const gmv = sum(rows, r => r.gmv), gain = sum(rows, r => r.gain), reg = sum(rows, r => r.regular_price);
+  return {gmv: r2(gmv), gain: r2(gain), gain_rate: gmv ? r1(gain / gmv * 100) : null, tx: rows.length,
+    orders: new Set(rows.map(r => r.order_id)).size, discount: reg ? r1((1 - gmv / reg) * 100) : null};
+};
+const inP = (r, p) => r.counted && (p === 'Razem' || r.period === p);
+const groupBy = (a, f) => { const m = new Map(); a.forEach(r => { const k = f(r); if (!m.has(k)) m.set(k, []); m.get(k).push(r); }); return m; };
+const rec = (spend, orders, poas, proas, gx) => orders > 0 ? (poas >= 3 ? 'Podkręć budżet' : poas >= 1 ? 'Utrzymaj' : 'Ogranicz')
+  : (proas >= 3 || gx >= 10) ? 'Sprawdź atrybucję' : spend >= 150 ? 'Tnij lub zmień' : 'Za mało danych';
+const recCls = t => ({'Podkręć budżet': 'ok', 'Ogranicz': 'warn', 'Sprawdź atrybucję': 'warn', 'Tnij lub zmień': 'bad'})[t] || '';
+const grCls = v => v == null ? '' : v >= CFG.TARGET_GR ? 'ok' : 'bad';
+const poasCls = r => r.poas >= 1 ? 'ok' : r.orders > 0 ? 'bad' : '';
+
+// ---------- tabele ----------
+const SORT = {};
+function table(id, cols, rows, defKey) {
+  const el = $(id); const st = SORT[id] || (SORT[id] = {k: defKey, d: -1});
+  const data = rows.slice().sort((a, b) => {
+    const x = a[st.k], y = b[st.k];
+    if (x == null) return 1; if (y == null) return -1;
+    return (typeof x === 'string' ? x.localeCompare(y, 'pl') : x - y) * st.d;
+  });
+  el.replaceChildren();
+  const thead = el.createTHead().insertRow();
+  cols.forEach(c => {
+    const th = document.createElement('th'); th.textContent = c.t + (st.k === c.k ? (st.d < 0 ? ' ↓' : ' ↑') : '');
+    if (c.l) th.className = 'l';
+    th.onclick = () => { if (st.k === c.k) st.d = -st.d; else { st.k = c.k; st.d = typeof rows[0]?.[c.k] === 'string' ? 1 : -1; } table(id, cols, rows, defKey); };
+    thead.append(th);
+  });
+  const tb = el.createTBody();
+  if (!data.length) { const td = tb.insertRow().insertCell(); td.colSpan = cols.length; td.className = 'l empty'; td.textContent = 'Brak danych w wybranym okresie.'; return; }
+  data.forEach(r => {
+    const tr = tb.insertRow();
+    cols.forEach(c => {
+      const td = tr.insertCell(); const v = r[c.k];
+      if (c.chip) { td.className = 'l'; const s = document.createElement('span'); s.className = 'chip ' + recCls(v); s.textContent = v; td.append(s); return; }
+      td.textContent = (c.f || F.id)(v);
+      const cl = [c.l ? 'l' : '', c.cls ? c.cls(r) : ''].join(' ').trim(); if (cl) td.className = cl;
+    });
+  });
+}
+
+// ---------- tooltip ----------
+const tip = $('tip');
+const showTip = (ev, txt) => { tip.hidden = false; tip.textContent = txt; tip.style.left = Math.min(ev.clientX + 12, innerWidth - tip.offsetWidth - 8) + 'px'; tip.style.top = (ev.clientY - 40) + 'px'; };
+const hideTip = () => { tip.hidden = true; };
+
+// ---------- render ----------
+function render() {
+  const tx = D.tx || [], groups = D.groups || [], ads = D.ads || [];
+  const subFrom = D.subFrom || '2026-11-17', subTo = D.subTo || '2026-11-24';
+  $('subFrom').value = subFrom; $('subTo').value = subTo;
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.p === PERIOD));
+
+  // cel
+  const all = agg(tx.filter(r => inP(r, 'Razem')));
+  const inRange = tx.filter(r => r.period !== 'Poza okresem').map(r => r.day).sort();
+  const last = inRange[inRange.length - 1] || CFG.START;
+  const days = Math.min(CFG.DAYS, Math.round((Date.parse(last) - Date.parse(CFG.START)) / 864e5) + 1);
+  const gp = all.gmv / CFG.TARGET_GMV * 100, pace = days / CFG.DAYS * 100, left = Math.max(0, CFG.TARGET_GMV - all.gmv);
+  const need = CFG.DAYS - days > 0 ? left / (CFG.DAYS - days) : left;
+  set('l_gmv', F.short(all.gmv)); set('l_pct', F.pct(gp), gp >= pace ? 'ok' : 'bad'); set('l_gr', F.pct(all.gain_rate), grCls(all.gain_rate));
+  set('l_last', last.slice(8, 10) + '.' + last.slice(5, 7));
+  set('t_gmv', F.short(all.gmv)); set('t_pct', F.pct(gp)); set('t_days', F.n(days)); set('t_pace', F.pct(pace));
+  set('t_left', F.short(left)); set('t_need', F.short(need)); set('t_gr', F.pct(all.gain_rate), grCls(all.gain_rate)); set('t_gain', F.short(all.gain));
+  $('t_fill').style.width = Math.min(100, gp) + '%'; $('t_fill').style.background = gp >= pace ? 'var(--ok)' : 'var(--c0)';
+  $('t_mark').style.left = 'calc(' + Math.min(100, pace) + '% - 1px)';
+
+  // KPI okresu
+  const rows = tx.filter(r => inP(r, PERIOD)); const k = agg(rows);
+  set('k_period', PERIOD === 'Razem' ? 'Razem (17.11–1.12)' : PERIOD);
+  set('k_gmv', F.short(k.gmv)); set('k_gain', F.short(k.gain)); set('k_gr', F.pct(k.gain_rate), grCls(k.gain_rate));
+  set('k_tx', F.n(k.tx)); set('k_orders', F.n(k.orders)); set('k_aov', F.zl(k.orders ? k.gmv / k.orders : null)); set('k_disc', F.pct(k.discount));
+
+  // dzienny
+  const dd = Array.from({length: CFG.DAYS}, (_, i) => { const day = new Date(Date.parse(CFG.START) + i * 864e5).toISOString().slice(0, 10); return {day, ...agg(tx.filter(r => r.counted && r.day === day))}; });
+  const mx = Math.max(1, ...dd.map(r => r.gmv)); const narrow = innerWidth < 640;
+  $('daily').replaceChildren(...dd.map(r => {
+    const c = document.createElement('div'); c.className = 'col';
+    const v = document.createElement('div'); v.className = 'v'; v.textContent = r.gmv && !narrow ? NF0.format(r.gmv / 1000) + 'k' : '';
+    const b = document.createElement('div'); b.className = 'b'; b.style.height = (r.gmv / mx * 88) + '%'; b.style.background = r.day <= CFG.URO_END ? 'var(--c1)' : 'var(--c0)';
+    c.append(v, b);
+    c.onmousemove = ev => showTip(ev, `${r.day.slice(8, 10)}.${r.day.slice(5, 7)} · GMV ${F.zl(r.gmv)} · gain ${F.zl(r.gain)} (${F.pct(r.gain_rate)}) · ${r.tx} szt.`);
+    c.onmouseleave = hideTip; return c;
+  }));
+  $('daily_x').replaceChildren(...dd.map((r, i) => { const d = document.createElement('div'); d.textContent = (!narrow || i % 2 === 0) ? r.day.slice(8, 10) + '.' + r.day.slice(5, 7) : ''; return d; }));
+
+  renderCats(rows);
+
+  // dostawcy
+  const vend = [...groupBy(rows, r => r.vendor)].map(([vendor, rs]) => ({vendor, ...agg(rs)}));
+  table('vendors', [{k: 'vendor', t: 'Dostawca'}, {k: 'gmv', t: 'GMV', f: F.zl}, {k: 'gain', t: 'Gain', f: F.zl}, {k: 'gain_rate', t: 'Gain rate', f: F.pct, cls: r => grCls(r.gain_rate)},
+    {k: 'tx', t: 'Transakcje', f: F.n}, {k: 'discount', t: 'Rabat od reg.', f: F.pct}], vend, 'gmv');
+
+  // grupy produktów
+  const gids = groupBy(groups, g => g.group); const allIds = new Set(groups.map(g => String(g.product_id)));
+  const total = sum(rows, r => r.gmv);
+  const grp = [...gids].map(([group, list]) => { const s = new Set(list.map(g => String(g.product_id))); const a = agg(rows.filter(r => s.has(String(r.product_id)))); return {group, products: s.size, ...a, share: total ? r1(a.gmv / total * 100) : null}; });
+  const out = agg(rows.filter(r => !allIds.has(String(r.product_id)))); grp.push({group: 'Poza kampaniami', products: null, ...out, share: total ? r1(out.gmv / total * 100) : null});
+  table('groups', [{k: 'group', t: 'Grupa'}, {k: 'products', t: 'Produktów w grupie', f: F.n}, {k: 'tx', t: 'Sprzedane szt.', f: F.n}, {k: 'gmv', t: 'GMV', f: F.zl},
+    {k: 'share', t: 'Udział w GMV', f: F.pct}, {k: 'gain', t: 'Gain', f: F.zl}, {k: 'gain_rate', t: 'Gain rate', f: F.pct, cls: r => grCls(r.gain_rate)}], grp, 'gmv');
+
+  // paid
+  set('sub_range', subFrom.slice(8, 10) + '.' + subFrom.slice(5, 7) + '–' + subTo.slice(8, 10) + '.' + subTo.slice(5, 7));
+  const spend = sum(ads, c => c.spend), rev = sum(ads, c => c.revenue), gpr = sum(ads, c => c.gross_profit); const zero = ads.filter(c => !(c.orders > 0));
+  set('p_spend', F.short(spend)); set('p_rev', F.short(rev)); set('p_roas', F.x(spend ? rev / spend : null)); set('p_gp', F.short(gpr));
+  set('p_poas', F.x(spend ? gpr / spend : null), spend && gpr / spend >= 1 ? 'ok' : 'bad'); set('p_zero', F.short(sum(zero, c => c.spend))); set('p_zero_n', F.n(zero.length));
+  const subRows = tx.filter(r => r.counted && r.day >= subFrom && r.day <= subTo);
+  const ggmv = g => { if (!gids.has(g)) return null; const s = new Set(gids.get(g).map(x => String(x.product_id))); return r2(sum(subRows.filter(r => s.has(String(r.product_id))), r => r.gmv)); };
+  const gp2 = [...groupBy(ads, c => c.group)].map(([group, cs]) => {
+    const sp = r2(sum(cs, c => c.spend)), o = sum(cs, c => c.orders), poas = sp ? r2(sum(cs, c => c.gross_profit) / sp) : null, gm = ggmv(group);
+    const gx = gm != null && sp ? r1(gm / sp) : null;
+    return {group, spend: sp, orders: o, revenue: r2(sum(cs, c => c.revenue)), poas, group_gmv: gm, gx, rec: rec(sp, o, poas, Math.max(0, ...cs.map(c => c.platform_roas || 0)), gx)};
+  });
+  table('gpaid', [{k: 'group', t: 'Grupa'}, {k: 'spend', t: 'Wydatek', f: F.zl}, {k: 'orders', t: 'Zam. (Sublime)', f: F.n}, {k: 'revenue', t: 'Przychód', f: F.zl},
+    {k: 'poas', t: 'POAS', f: F.x, cls: poasCls}, {k: 'group_gmv', t: 'GMV grupy', f: F.zl}, {k: 'gx', t: 'GMV grupy ÷ wydatek', f: F.x}, {k: 'rec', t: 'Rekomendacja', l: 1, chip: 1}], gp2, 'spend');
+  const camps = ads.map(c => { const poas = c.spend ? r2(c.gross_profit / c.spend) : null; const gm = ggmv(c.group); const gx = gm != null && c.spend ? r1(gm / c.spend) : null;
+    return {...c, poas, platform_roas: c.platform_roas || null, rec: rec(c.spend, c.orders, poas, c.platform_roas, gx)}; });
+  table('camps', [{k: 'campaign', t: 'Kampania'}, {k: 'channel', t: 'Kanał', l: 1}, {k: 'group', t: 'Grupa', l: 1}, {k: 'spend', t: 'Wydatek', f: F.zl}, {k: 'orders', t: 'Zam.', f: F.n},
+    {k: 'revenue', t: 'Przychód', f: F.zl}, {k: 'gross_profit', t: 'Zysk brutto', f: F.zl}, {k: 'poas', t: 'POAS', f: F.x, cls: poasCls},
+    {k: 'platform_roas', t: 'ROAS platformy', f: F.x}, {k: 'rec', t: 'Rekomendacja', l: 1, chip: 1}], camps, 'spend');
+
+  $('foot').textContent = `Źródła: transakcje – ${D.srcTx || '—'}; kampanie – ${D.srcAds || '—'}; grupy produktów – ${D.srcGroups || '—'}.`;
+}
+
+// ---------- kategorie ----------
+const CAT = {level: 1, path: [], all: false};
+const CK = ['category', 'category2', 'category3'];
+const PAL = ['#4f8a6b', '#8a5a9e', '#3f8fa6', '#a6913f', '#b3412f', '#6d7f99', '#9e6b5a'];
+function renderCats(rows) {
+  document.querySelectorAll('#catlevel button').forEach(b => b.classList.toggle('on', Number(b.dataset.l) === CAT.level));
+  const scoped = rows.filter(r => CAT.path.every((v, i) => r[CK[i]] === v));
+  const key = CK[CAT.level - 1];
+  const total = sum(scoped, r => r.gmv);
+  const list = [...groupBy(scoped, r => CAT.level === 1 ? r.category : CK.slice(0, CAT.level).map(k => r[k]).join('\u0001'))].map(([k, rs]) => {
+    const parts = k.split('\u0001');
+    return {name: parts[parts.length - 1], parents: parts.slice(CAT.path.length, -1), full: parts, ...agg(rs),
+      uro: sum(rs.filter(r => r.period === 'Urodziny'), r => r.gmv), bw: sum(rs.filter(r => r.period === 'Black Week'), r => r.gmv),
+      share: total ? r1(sum(rs, r => r.gmv) / total * 100) : 0};
+  }).sort((a, b) => b.gmv - a.gmv);
+
+  // okruszki
+  const cr = $('crumbs'); cr.replaceChildren();
+  if (CAT.path.length) {
+    const mk = (txt, depth) => { const a = document.createElement('a'); a.textContent = txt; a.onclick = () => { CAT.path = CAT.path.slice(0, depth); CAT.level = Math.max(CAT.level, depth + 1); CAT.level = depth + 1; CAT.all = false; render(); }; return a; };
+    cr.append(mk('Wszystkie kategorie', 0));
+    CAT.path.forEach((p, i) => { cr.append(' › '); if (i < CAT.path.length - 1) cr.append(mk(p, i + 1)); else cr.append(p); });
+  }
+
+  // pasek udziałów
+  const top = list.slice(0, 7), rest = list.slice(7);
+  const segs = top.map((c, i) => ({name: c.name, gmv: c.gmv, share: c.share, col: PAL[i]}));
+  if (rest.length) segs.push({name: `Pozostałe (${rest.length})`, gmv: sum(rest, c => c.gmv), share: r1(sum(rest, c => c.share)), col: '#cfcbc1'});
+  $('strip').replaceChildren(...segs.map(s => { const d = document.createElement('div'); d.style.flex = String(Math.max(s.gmv, 0.0001)); d.style.background = s.col;
+    d.onmousemove = ev => showTip(ev, `${s.name}: ${F.zl(s.gmv)} (${F.pct(s.share)})`); d.onmouseleave = hideTip; return d; }));
+  $('skey').replaceChildren(...segs.map(s => { const sp = document.createElement('span'); const i = document.createElement('i'); i.className = 'sw'; i.style.background = s.col; sp.append(i, `${s.name} ${F.pct(s.share)}`); return sp; }));
+
+  // wiersze
+  const shown = CAT.all ? list : list.slice(0, 15);
+  const mx = Math.max(1, ...list.map(c => c.gmv));
+  const both = PERIOD === 'Razem';
+  $('catleg').hidden = !both;
+  $('cats').replaceChildren(...(shown.length ? shown.map(c => {
+    const row = document.createElement('div'); row.className = 'crow' + (CAT.level < 3 ? ' click' : '');
+    const nm = document.createElement('div'); nm.className = 'nm';
+    const b = document.createElement('b'); b.textContent = c.name; nm.append(b);
+    if (c.parents.length) { const s = document.createElement('small'); s.textContent = c.parents.join(' › '); nm.append(s); }
+    const tr = document.createElement('div'); tr.className = 'track';
+    const add = (v, col) => { if (v <= 0) return; const x = document.createElement('div'); x.style.width = (v / mx * 100) + '%'; x.style.background = col; tr.append(x); };
+    if (both) { add(c.uro, 'var(--c1)'); add(c.bw, 'var(--c0)'); } else add(c.gmv, PERIOD === 'Urodziny' ? 'var(--c1)' : 'var(--c0)');
+    const v = document.createElement('div'); v.className = 'val'; v.textContent = F.short(c.gmv);
+    const sm = document.createElement('small'); sm.textContent = `${F.pct(c.share)} · ${c.tx} szt.`; v.append(sm);
+    const g = document.createElement('span'); g.className = 'grc ' + grCls(c.gain_rate); g.textContent = F.pct(c.gain_rate);
+    row.append(nm, tr, v, g);
+    row.onmousemove = ev => showTip(ev, `${c.full.join(' › ')} · GMV ${F.zl(c.gmv)}${both ? ` (Urodziny ${F.zl(c.uro)}, BW ${F.zl(c.bw)})` : ''} · gain ${F.zl(c.gain)} · rabat ${F.pct(c.discount)} · ${c.orders} zam.`);
+    row.onmouseleave = hideTip;
+    if (CAT.level < 3) row.onclick = () => { hideTip(); CAT.path = c.full.slice(); CAT.level = CAT.path.length + 1; CAT.all = false; render(); };
+    return row;
+  }) : [Object.assign(document.createElement('div'), {className: 'empty', textContent: 'Brak sprzedaży w wybranym okresie.'})]));
+  const more = $('catmore'); more.hidden = list.length <= 15;
+  more.textContent = CAT.all ? 'Pokaż top 15' : `Pokaż wszystkie (${list.length})`;
+  more.onclick = () => { CAT.all = !CAT.all; render(); };
+}
+document.querySelectorAll('#catlevel button').forEach(b => b.onclick = () => {
+  const l = Number(b.dataset.l); CAT.level = l; CAT.path = CAT.path.slice(0, l - 1); CAT.all = false; render();
+});
+
+// ---------- zdarzenia ----------
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => { PERIOD = b.dataset.p; render(); });
+$('subFrom').onchange = e => { if (e.target.value) { D.subFrom = e.target.value; save(); render(); } };
+$('subTo').onchange = e => { if (e.target.value) { D.subTo = e.target.value; save(); render(); } };
+$('reset').onclick = () => { try { localStorage.removeItem(LS); } catch (e) {} D = JSON.parse(JSON.stringify(EMBED)); $('status').textContent = 'Przywrócono dane zapisane w pliku.'; render(); };
+async function load(files) {
+  const msgs = [];
+  for (const f of files) {
+    try {
+      const rows = parseCSV(await f.text()); const h = (rows[0] || []).join('|');
+      if (/Transaction ID/.test(h)) { D.tx = normTx(rows); D.srcTx = f.name; msgs.push(`${f.name}: ${D.tx.length} transakcji`); }
+      else if (/Campaign Name/.test(h)) { D.ads = normAds(rows); D.srcAds = f.name; msgs.push(`${f.name}: ${D.ads.length} kampanii`); }
+      else { const g = normGroups(rows); if (!g.length) throw new Error('nie rozpoznano pliku'); D.groups = g; D.srcGroups = f.name; msgs.push(`${f.name}: ${new Set(g.map(x => x.group)).size} grup produktów`); }
+    } catch (e) { msgs.push(`${f.name}: błąd – ${e.message}`); }
+  }
+  save(); $('status').textContent = 'Wczytano: ' + msgs.join('; ') + '. Jeśli zmienił się okres danych Sublime, popraw daty obok.'; render();
+}
+$('files').onchange = e => load([...e.target.files]);
+const up = $('upload');
+['dragenter', 'dragover'].forEach(t => up.addEventListener(t, e => { e.preventDefault(); up.classList.add('drag'); }));
+['dragleave', 'drop'].forEach(t => up.addEventListener(t, e => { e.preventDefault(); up.classList.remove('drag'); }));
+up.addEventListener('drop', e => load([...e.dataTransfer.files]));
+addEventListener('resize', () => { clearTimeout(window._rt); window._rt = setTimeout(render, 150); });
+render();
+</script>
+</body>
+</html>
