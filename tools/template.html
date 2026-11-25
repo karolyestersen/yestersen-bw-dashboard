@@ -129,7 +129,7 @@ Okres danych Sublime: <input type="date" id="subFrom"> – <input type="date" id
 <div class="card"><div class="lab">GMV (cena produktu po rabatach)</div><div class="big" id="k_gmv">—</div></div>
 <div class="card"><div class="lab">Gain</div><div class="big" id="k_gain">—</div></div>
 <div class="card"><div class="lab">Gain rate (cel 19%)</div><div class="big" id="k_gr">—</div></div>
-<div class="card"><div class="lab">Transakcje (sztuki)</div><div class="big" id="k_tx">—</div><div class="note">w <span id="k_orders">—</span> zamówieniach, AOV <span id="k_aov">—</span></div></div>
+<div class="card"><div class="lab">Transakcje (sztuki)</div><div class="big" id="k_tx">—</div><div class="note">w <span id="k_orders">—</span> zamówieniach, AOV <span id="k_aov">—</span></div><div class="note" id="k_samples_wrap">Pominięte próbniki tkanin (mikrokonwersje): <span id="k_samples">—</span></div></div>
 <div class="card"><div class="lab">Rabat od ceny regularnej</div><div class="big" id="k_disc">—</div></div>
 </div>
 </section>
@@ -198,9 +198,10 @@ Okres danych Sublime: <input type="date" id="subFrom"> – <input type="date" id
 <li><b>Gain</b> – „Total gain” z CMS (prowizja minus rabat z kodu). <b>Gain rate</b> = gain ÷ GMV.</li>
 <li><b>Rabat od ceny regularnej</b> = 1 − GMV ÷ suma aktualnych cen regularnych.</li>
 <li><b>Transakcja</b> = jedna sztuka (wiersz eksportu); zamówienie może mieć kilka.</li>
+<li><b>Próbniki / wzorniki tkanin</b> (np. „Wzornik tkanin Togo”) to mikrokonwersje – nie wliczają się do GMV, transakcji ani grup; ich liczba jest podana pod KPI.</li>
 <li>Liczymy tylko transakcje opłacone 17.11–1.12, bez anulowanych i zwróconych.</li>
 <li><b>Zysk netto</b> = „Gross Profit” z Sublime ÷ 1,23 (VAT). <b>POAS netto</b> = zysk netto ÷ wydatek (netto).</li>
-<li><b>Rekomendacja</b>: „Podkręć budżet” przy POAS netto ≥ 3; „Utrzymaj” przy POAS netto 1–3; „Ogranicz” przy POAS netto &lt; 1 z zamówieniami; „Sprawdź atrybucję”, gdy Sublime nie widzi zamówień, a ROAS platformy ≥ 3 albo GMV grupy ≥ 10× wydatku; „Tnij lub zmień” przy wydatku ≥ 150 zł bez zamówień; poniżej tego „Za mało danych”.</li>
+<li><b>Rekomendacja</b>: „Podkręć budżet” przy POAS netto ≥ 3 i co najmniej 3 zamówieniach w Sublime (przy AOV ≥ 3 tys. zł – co najmniej 5); przy mniejszej liczbie zamówień „Podkręć ostrożnie”, bo jedna sprzedaż więcej lub mniej mocno zmienia wynik; „Utrzymaj” przy POAS netto 1–3; „Ogranicz” przy POAS netto &lt; 1 z zamówieniami; „Sprawdź atrybucję”, gdy Sublime nie widzi zamówień, a ROAS platformy ≥ 3 albo GMV grupy ≥ 10× wydatku; „Tnij lub zmień” przy wydatku ≥ 150 zł bez zamówień; poniżej tego „Za mało danych”.</li>
 <li>Grupy Togo i Meble Bauhaus obejmują też produkty spoza listy ID: Togo = nazwa zawiera „Togo” lub dostawca Boketto; Meble Bauhaus = dostawca Bauhaus Design.</li>
 <li>Kanał wg nazwy: [PMAX] / PLA / SW = Google, nazwy z datą (112026_…) = Meta. Grupa kampanii wg nazwy (np. „Lampy Bolia” → Bolia Lampy); pozostałe = ogólne / always-on.</li>
 <li>Dane kupujących (e-mail, imię, telefon, adres) nie są wczytywane do strony.</li>
@@ -213,6 +214,8 @@ Okres danych Sublime: <input type="date" id="subFrom"> – <input type="date" id
 <script>
 const EMBED = /*__DATA__*/null;
 const VAT = 1.23;
+// Próbniki / wzorniki tkanin = mikrokonwersje, nie liczymy ich do sprzedaży.
+const SAMPLE_RE = /wzornik|próbnik|probnik/i;
 const CFG = {TARGET_GMV: 550000, TARGET_GR: 19, START: '2026-11-17', DAYS: 15, URO_END: '2026-11-23', END: '2026-12-01'};
 const NF0 = new Intl.NumberFormat('pl-PL', {maximumFractionDigits: 0});
 const NF1 = new Intl.NumberFormat('pl-PL', {minimumFractionDigits: 1, maximumFractionDigits: 1});
@@ -260,7 +263,8 @@ function normTx(rows) {
     const p = periodOf(day);
     return {transaction_id: r['Transaction ID'].trim(), order_id: (r['Order ID'] || '').trim(), product_id: (r['Product ID'] || '').trim(),
       product: (r['Product name'] || '').trim(), vendor: (r['Vendor name'] || '').trim(), day, period: p || 'Poza okresem',
-      counted: !/CANCEL|RETURN|REFUND|REJECT/i.test(status) && !returned && !!p, status,
+      sample: SAMPLE_RE.test(r['Product name'] || ''),
+      counted: !/CANCEL|RETURN|REFUND|REJECT/i.test(status) && !returned && !!p && !SAMPLE_RE.test(r['Product name'] || ''), status,
       gmv: r2(price), regular_price: r2(reg > 0 ? reg : price), gain: r2(num(r['Total gain'])),
       category: stripCat(r['Product category level 1']), category2: stripCat(r['Product category level 2']).replace(/^Brak$/, '(bez podkategorii)'),
       category3: stripCat(r['Product category level 3']).replace(/^Brak$/, '(bez podkategorii)'), classification: (r['Product classification'] || '').trim()};
@@ -302,9 +306,11 @@ const agg = rows => {
 };
 const inP = (r, p) => r.counted && (p === 'Razem' || r.period === p);
 const groupBy = (a, f) => { const m = new Map(); a.forEach(r => { const k = f(r); if (!m.has(k)) m.set(k, []); m.get(k).push(r); }); return m; };
-const rec = (spend, orders, poas, proas, gx) => orders > 0 ? (poas >= 3 ? 'Podkręć budżet' : poas >= 1 ? 'Utrzymaj' : 'Ogranicz')
+// Mało zamówień albo wysokie AOV = duża niepewność: jedna sprzedaż mniej zmienia wynik o kilkadziesiąt procent.
+const thin = (orders, aov) => orders < 3 || (aov >= 3000 && orders < 5);
+const rec = (spend, orders, poas, proas, gx, aov) => orders > 0 ? (poas >= 3 ? (thin(orders, aov) ? 'Podkręć ostrożnie' : 'Podkręć budżet') : poas >= 1 ? 'Utrzymaj' : 'Ogranicz')
   : (proas >= 3 || gx >= 10) ? 'Sprawdź atrybucję' : spend >= 150 ? 'Tnij lub zmień' : 'Za mało danych';
-const recCls = t => ({'Podkręć budżet': 'ok', 'Ogranicz': 'warn', 'Sprawdź atrybucję': 'warn', 'Tnij lub zmień': 'bad'})[t] || '';
+const recCls = t => ({'Podkręć budżet': 'ok', 'Podkręć ostrożnie': 'ok', 'Ogranicz': 'warn', 'Sprawdź atrybucję': 'warn', 'Tnij lub zmień': 'bad'})[t] || '';
 const grCls = v => v == null ? '' : v >= CFG.TARGET_GR ? 'ok' : 'bad';
 const poasCls = r => r.poas >= 1 ? 'ok' : r.orders > 0 ? 'bad' : '';
 
@@ -387,7 +393,7 @@ function render() {
   const rows = tx.filter(r => inP(r, PERIOD)); const k = agg(rows);
   set('k_period', PERIOD === 'Razem' ? 'Razem (17.11–1.12)' : PERIOD);
   set('k_gmv', F.short(k.gmv)); set('k_gain', F.short(k.gain)); set('k_gr', F.pct(k.gain_rate), grCls(k.gain_rate));
-  set('k_tx', F.n(k.tx)); set('k_orders', F.n(k.orders)); set('k_aov', F.zl(k.orders ? k.gmv / k.orders : null)); set('k_disc', F.pct(k.discount));
+  set('k_tx', F.n(k.tx)); { const sm = tx.filter(r => r.sample && r.period !== 'Poza okresem' && (PERIOD === 'Razem' || r.period === PERIOD)); set('k_samples', `${sm.length} szt. (${F.zl(sum(sm, r => r.gmv))})`); } set('k_orders', F.n(k.orders)); set('k_aov', F.zl(k.orders ? k.gmv / k.orders : null)); set('k_disc', F.pct(k.discount));
 
   // dzienny
   const dd = Array.from({length: CFG.DAYS}, (_, i) => { const day = new Date(Date.parse(CFG.START) + i * 864e5).toISOString().slice(0, 10); return {day, ...agg(tx.filter(r => r.counted && r.day === day))}; });
@@ -436,17 +442,20 @@ function render() {
   set('p_poas', F.x(spend ? gpr / spend : null), spend && gpr / spend >= 1 ? 'ok' : 'bad'); set('p_zero', F.short(sum(zero, c => c.spend))); set('p_zero_n', F.n(zero.length));
   const subRows = tx.filter(r => r.counted && r.day >= subFrom && r.day <= subTo);
   const ggmv = g => { if (!gids.has(g)) return null; const s = new Set(gids.get(g).map(x => String(x.product_id))); return r2(sum(subRows.filter(r => inG(r, g, s)), r => r.gmv)); };
+  const gitems = g => { if (!gids.has(g)) return null; const s = new Set(gids.get(g).map(x => String(x.product_id))); return subRows.filter(r => inG(r, g, s)).length; };
   const gp2 = [...groupBy(ads, c => c.group)].map(([group, cs]) => {
     const sp = r2(sum(cs, c => c.spend)), o = sum(cs, c => c.orders), poas = sp ? r2(sum(cs, c => c.gross_profit) / VAT / sp) : null, gm = ggmv(group);
-    const gx = gm != null && sp ? r1(gm / sp) : null;
-    return {group, spend: sp, orders: o, revenue: r2(sum(cs, c => c.revenue)), poas, group_gmv: gm, gx, rec: rec(sp, o, poas, Math.max(0, ...cs.map(c => c.platform_roas || 0)), gx)};
+    const gx = gm != null && sp ? r1(gm / sp) : null, items = gitems(group), aov = items ? r2(gm / items) : null;
+    const rv = r2(sum(cs, c => c.revenue)), saov = o ? rv / o : null;
+    return {group, spend: sp, orders: o, revenue: rv, poas, group_items: items, group_aov: aov, group_gmv: gm, gx,
+      rec: rec(sp, o, poas, Math.max(0, ...cs.map(c => c.platform_roas || 0)), gx, Math.max(aov || 0, saov || 0))};
   });
   table('gpaid', [{k: 'group', t: 'Grupa'}, {k: 'spend', t: 'Wydatek', f: F.zl}, {k: 'orders', t: 'Zam. (Sublime)', f: F.n}, {k: 'revenue', t: 'Przychód', f: F.zl},
-    {k: 'poas', t: 'POAS netto', f: F.x, cls: poasCls}, {k: 'group_gmv', t: 'GMV grupy', f: F.zl}, {k: 'gx', t: 'GMV grupy ÷ wydatek', f: F.x}, {k: 'rec', t: 'Rekomendacja', l: 1, chip: 1}], gp2, 'spend');
+    {k: 'poas', t: 'POAS netto', f: F.x, cls: poasCls}, {k: 'group_items', t: 'Szt. grupy', f: F.n}, {k: 'group_aov', t: 'Śr. cena szt.', f: F.zl}, {k: 'group_gmv', t: 'GMV grupy', f: F.zl}, {k: 'gx', t: 'GMV grupy ÷ wydatek', f: F.x}, {k: 'rec', t: 'Rekomendacja', l: 1, chip: 1}], gp2, 'spend');
   const camps = ads.map(c => { const net = r2(c.gross_profit / VAT); const poas = c.spend ? r2(net / c.spend) : null; const gm = ggmv(c.group); const gx = gm != null && c.spend ? r1(gm / c.spend) : null;
-    return {...c, net_profit: net, poas, platform_roas: c.platform_roas || null, rec: rec(c.spend, c.orders, poas, c.platform_roas, gx)}; });
+    return {...c, net_profit: net, poas, platform_roas: c.platform_roas || null, aov: c.orders ? r2(c.revenue / c.orders) : null, rec: rec(c.spend, c.orders, poas, c.platform_roas, gx, c.orders ? c.revenue / c.orders : 0)}; });
   table('camps', [{k: 'campaign', t: 'Kampania'}, {k: 'channel', t: 'Kanał', l: 1}, {k: 'group', t: 'Grupa', l: 1}, {k: 'spend', t: 'Wydatek', f: F.zl}, {k: 'orders', t: 'Zam.', f: F.n},
-    {k: 'revenue', t: 'Przychód', f: F.zl}, {k: 'net_profit', t: 'Zysk netto', f: F.zl}, {k: 'poas', t: 'POAS netto', f: F.x, cls: poasCls},
+    {k: 'revenue', t: 'Przychód', f: F.zl}, {k: 'aov', t: 'AOV', f: F.zl}, {k: 'net_profit', t: 'Zysk netto', f: F.zl}, {k: 'poas', t: 'POAS netto', f: F.x, cls: poasCls},
     {k: 'platform_roas', t: 'ROAS platformy', f: F.x}, {k: 'rec', t: 'Rekomendacja', l: 1, chip: 1}], camps, 'spend');
 
   $('foot').textContent = `Źródła: transakcje – ${D.srcTx || '—'}; kampanie – ${D.srcAds || '—'}; grupy produktów – ${D.srcGroups || '—'}.`;

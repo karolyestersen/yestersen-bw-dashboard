@@ -17,6 +17,7 @@ CODE = open(os.path.abspath(__file__), encoding="utf-8").read()
 
 PERIODS = [("Urodziny", "2026-11-17", "2026-11-23"), ("Black Week", "2026-11-24", "2026-12-01")]
 EXCLUDED_STATUS = re.compile(r"CANCEL|RETURN|REFUND|REJECT", re.I)
+SAMPLE_RE = re.compile(r"wzornik|próbnik|probnik", re.I)  # mikrokonwersje
 
 
 def num(s):
@@ -56,7 +57,8 @@ with open(tx_path, encoding="utf-8-sig", newline="") as f:
             "vendor": r["Vendor name"].strip(),
             "day": day,
             "period": period_of(day) or "Poza okresem",
-            "counted": (not EXCLUDED_STATUS.search(status)) and not returned and period_of(day) is not None,
+            "sample": bool(SAMPLE_RE.search(r["Product name"] or "")),
+            "counted": (not EXCLUDED_STATUS.search(status)) and not returned and period_of(day) is not None and not SAMPLE_RE.search(r["Product name"] or ""),
             "status": status,
             "gmv": round(price, 2),
             "regular_price": round(regular if regular > 0 else price, 2),
