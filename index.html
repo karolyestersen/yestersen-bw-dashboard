@@ -307,8 +307,8 @@ const poasCls = r => r.poas >= 1 ? 'ok' : r.orders > 0 ? 'bad' : '';
 
 // ---------- cele GMV dostawców (17.11–1.12) ----------
 // Celowo lekko przeszacowane – suma może przekraczać cel całkowity.
-const VENDOR_TARGETS = [['Boketto', 200000], ['Bauhaus Design', 80000], ['Zieta', 60000], ['Przetwory', 70000], ['Antyki Galicja', 25000],
-  ['Malwina Konopacka', 15000], ['Artera', 15000], ['TAMO', 15000], ['Carpets & More', 20000], ['366 Concept', 15000], ['Bolia', 20000]];
+const VENDOR_TARGETS = [['Boketto', 180000], ['Bauhaus Design', 80000], ['Zieta', 50000], ['Przetwory', 70000], ['Antyki Galicja', 20000],
+  ['Malwina Konopacka', 10000], ['Artera', 13000], ['TAMO', 15000], ['Carpets & More', 15000], ['366 Concept', 15000], ['Bolia', 20000]];
 const normV = s => String(s || '').toLowerCase().replace(/[^a-z0-9ąćęłńóśźż]/g, '');
 const targetOf = vendor => { const n = normV(vendor); const m = VENDOR_TARGETS.find(([k]) => n.startsWith(normV(k))); return m || null; };
 
