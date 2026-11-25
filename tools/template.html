@@ -164,7 +164,7 @@ Okres danych Sublime: <input type="date" id="subFrom"> – <input type="date" id
 
 <section class="card">
 <h2>Sprzedaż per grupa produktów z kampanii</h2>
-<p class="sub">Transakcja trafia do grupy, jeśli jej ID produktu jest na liście tej grupy. Produkt może być w kilku grupach (np. BW ogólna), więc wiersze nie sumują się do całości.</p>
+<p class="sub">Transakcja trafia do grupy, jeśli jej ID produktu jest na liście tej grupy. Dodatkowo do Togo liczymy wszystkie produkty Togo / Boketto, a do Meble Bauhaus wszystkie produkty Bauhaus Design – także te, których ID nie ma w arkuszu („Produktów w grupie” liczy tylko ID z arkusza). Produkt może być w kilku grupach (np. BW ogólna), więc wiersze nie sumują się do całości.</p>
 <div class="tw"><table id="groups"></table></div>
 </section>
 
@@ -199,6 +199,7 @@ Okres danych Sublime: <input type="date" id="subFrom"> – <input type="date" id
 <li><b>Transakcja</b> = jedna sztuka (wiersz eksportu); zamówienie może mieć kilka.</li>
 <li>Liczymy tylko transakcje opłacone 17.11–1.12, bez anulowanych i zwróconych.</li>
 <li><b>Rekomendacja</b>: „Podkręć budżet” przy POAS ≥ 3; „Utrzymaj” przy POAS 1–3; „Ogranicz” przy POAS &lt; 1 z zamówieniami; „Sprawdź atrybucję”, gdy Sublime nie widzi zamówień, a ROAS platformy ≥ 3 albo GMV grupy ≥ 10× wydatku; „Tnij lub zmień” przy wydatku ≥ 150 zł bez zamówień; poniżej tego „Za mało danych”.</li>
+<li>Grupy Togo i Meble Bauhaus obejmują też produkty spoza listy ID: Togo = nazwa zawiera „Togo” lub dostawca Boketto; Meble Bauhaus = dostawca Bauhaus Design.</li>
 <li>Kanał wg nazwy: [PMAX] / PLA / SW = Google, nazwy z datą (112026_…) = Meta. Grupa kampanii wg nazwy (np. „Lampy Bolia” → Bolia Lampy); pozostałe = ogólne / always-on.</li>
 <li>Dane kupujących (e-mail, imię, telefon, adres) nie są wczytywane do strony.</li>
 </ul>
@@ -304,6 +305,14 @@ const recCls = t => ({'Podkręć budżet': 'ok', 'Ogranicz': 'warn', 'Sprawdź a
 const grCls = v => v == null ? '' : v >= CFG.TARGET_GR ? 'ok' : 'bad';
 const poasCls = r => r.poas >= 1 ? 'ok' : r.orders > 0 ? 'bad' : '';
 
+// ---------- reguły grup poza listą ID ----------
+// Produkty liczone do grupy kampanii nawet bez ID w arkuszu Ads IDs.
+const GROUP_RULES = {
+  'Togo': r => /togo/i.test(r.product || '') || r.vendor === 'Boketto',
+  'Meble Bauhaus': r => r.vendor === 'Bauhaus Design',
+};
+const inG = (r, g, set) => set.has(String(r.product_id)) || !!(GROUP_RULES[g] && GROUP_RULES[g](r));
+
 // ---------- tabele ----------
 const SORT = {};
 function table(id, cols, rows, defKey) {
@@ -382,15 +391,17 @@ function render() {
   renderCats(rows);
 
   // dostawcy
-  const vend = [...groupBy(rows, r => r.vendor)].map(([vendor, rs]) => ({vendor, ...agg(rs)}));
-  table('vendors', [{k: 'vendor', t: 'Dostawca'}, {k: 'gmv', t: 'GMV', f: F.zl}, {k: 'gain', t: 'Gain', f: F.zl}, {k: 'gain_rate', t: 'Gain rate', f: F.pct, cls: r => grCls(r.gain_rate)},
+  const totGain = sum(rows, r => r.gain);
+  const vend = [...groupBy(rows, r => r.vendor)].map(([vendor, rs]) => { const a = agg(rs); return {vendor, ...a, gain_share: totGain ? r1(a.gain / totGain * 100) : null}; });
+  table('vendors', [{k: 'vendor', t: 'Dostawca'}, {k: 'gmv', t: 'GMV', f: F.zl}, {k: 'gain', t: 'Gain', f: F.zl}, {k: 'gain_share', t: 'Udział w gainie', f: F.pct}, {k: 'gain_rate', t: 'Gain rate', f: F.pct, cls: r => grCls(r.gain_rate)},
     {k: 'tx', t: 'Transakcje', f: F.n}, {k: 'discount', t: 'Rabat od reg.', f: F.pct}], vend, 'gmv');
 
   // grupy produktów
   const gids = groupBy(groups, g => g.group); const allIds = new Set(groups.map(g => String(g.product_id)));
   const total = sum(rows, r => r.gmv);
-  const grp = [...gids].map(([group, list]) => { const s = new Set(list.map(g => String(g.product_id))); const a = agg(rows.filter(r => s.has(String(r.product_id)))); return {group, products: s.size, ...a, share: total ? r1(a.gmv / total * 100) : null}; });
-  const out = agg(rows.filter(r => !allIds.has(String(r.product_id)))); grp.push({group: 'Poza kampaniami', products: null, ...out, share: total ? r1(out.gmv / total * 100) : null});
+  const inAnyRule = r => Object.entries(GROUP_RULES).some(([g, f]) => gids.has(g) && f(r));
+  const grp = [...gids].map(([group, list]) => { const s = new Set(list.map(g => String(g.product_id))); const a = agg(rows.filter(r => inG(r, group, s))); return {group, products: s.size, ...a, share: total ? r1(a.gmv / total * 100) : null}; });
+  const out = agg(rows.filter(r => !allIds.has(String(r.product_id)) && !inAnyRule(r))); grp.push({group: 'Poza kampaniami', products: null, ...out, share: total ? r1(out.gmv / total * 100) : null});
   table('groups', [{k: 'group', t: 'Grupa'}, {k: 'products', t: 'Produktów w grupie', f: F.n}, {k: 'tx', t: 'Sprzedane szt.', f: F.n}, {k: 'gmv', t: 'GMV', f: F.zl},
     {k: 'share', t: 'Udział w GMV', f: F.pct}, {k: 'gain', t: 'Gain', f: F.zl}, {k: 'gain_rate', t: 'Gain rate', f: F.pct, cls: r => grCls(r.gain_rate)}], grp, 'gmv');
 
@@ -400,7 +411,7 @@ function render() {
   set('p_spend', F.short(spend)); set('p_rev', F.short(rev)); set('p_roas', F.x(spend ? rev / spend : null)); set('p_gp', F.short(gpr));
   set('p_poas', F.x(spend ? gpr / spend : null), spend && gpr / spend >= 1 ? 'ok' : 'bad'); set('p_zero', F.short(sum(zero, c => c.spend))); set('p_zero_n', F.n(zero.length));
   const subRows = tx.filter(r => r.counted && r.day >= subFrom && r.day <= subTo);
-  const ggmv = g => { if (!gids.has(g)) return null; const s = new Set(gids.get(g).map(x => String(x.product_id))); return r2(sum(subRows.filter(r => s.has(String(r.product_id))), r => r.gmv)); };
+  const ggmv = g => { if (!gids.has(g)) return null; const s = new Set(gids.get(g).map(x => String(x.product_id))); return r2(sum(subRows.filter(r => inG(r, g, s)), r => r.gmv)); };
   const gp2 = [...groupBy(ads, c => c.group)].map(([group, cs]) => {
     const sp = r2(sum(cs, c => c.spend)), o = sum(cs, c => c.orders), poas = sp ? r2(sum(cs, c => c.gross_profit) / sp) : null, gm = ggmv(group);
     const gx = gm != null && sp ? r1(gm / sp) : null;
