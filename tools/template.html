@@ -70,6 +70,7 @@ th:hover{color:var(--fg)}
 td{text-align:right;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
 th:first-child,td:first-child{text-align:left;white-space:normal;min-width:150px}
 td.l,th.l{text-align:left}
+tfoot td{font-weight:600;border-top:2px solid var(--fg);border-bottom:0}
 .chip{display:inline-block;padding:2px 9px;border-radius:999px;border:1px solid currentColor;font-size:12px}
 .upload{border:2px dashed var(--line);border-radius:10px;padding:16px;background:var(--panel);font-size:13px}
 .upload.drag{border-color:var(--c0);background:#eef3f8}
@@ -158,7 +159,7 @@ Okres danych Sublime: <input type="date" id="subFrom"> – <input type="date" id
 
 <section class="card">
 <h2>Dostawcy</h2>
-<p class="sub">Wybrany okres. Kliknij nagłówek, żeby posortować. „Realizacja celu” zawsze liczona za całe 17.11–1.12 (niezależnie od przełącznika okresu); zielona = na lub ponad równe tempo dzienne, czerwona = poniżej.</p>
+<p class="sub">Wybrany okres. Kliknij nagłówek, żeby posortować. Wiersz „Razem”: sumy GMV, gainu i celów; gain rate i rabat to średnie ważone GMV; realizacja = GMV dostawców z celem ÷ suma ich celów. „Realizacja celu” zawsze liczona za całe 17.11–1.12 (niezależnie od przełącznika okresu); zielona = na lub ponad równe tempo dzienne, czerwona = poniżej.</p>
 <div class="tw"><table id="vendors"></table></div>
 </section>
 
@@ -321,7 +322,7 @@ const inG = (r, g, set) => set.has(String(r.product_id)) || !!(GROUP_RULES[g] &&
 
 // ---------- tabele ----------
 const SORT = {};
-function table(id, cols, rows, defKey) {
+function table(id, cols, rows, defKey, foot) {
   const el = $(id); const st = SORT[id] || (SORT[id] = {k: defKey, d: -1});
   const data = rows.slice().sort((a, b) => {
     const x = a[st.k], y = b[st.k];
@@ -333,7 +334,7 @@ function table(id, cols, rows, defKey) {
   cols.forEach(c => {
     const th = document.createElement('th'); th.textContent = c.t + (st.k === c.k ? (st.d < 0 ? ' ↓' : ' ↑') : '');
     if (c.l) th.className = 'l';
-    th.onclick = () => { if (st.k === c.k) st.d = -st.d; else { st.k = c.k; st.d = typeof rows[0]?.[c.k] === 'string' ? 1 : -1; } table(id, cols, rows, defKey); };
+    th.onclick = () => { if (st.k === c.k) st.d = -st.d; else { st.k = c.k; st.d = typeof rows[0]?.[c.k] === 'string' ? 1 : -1; } table(id, cols, rows, defKey, foot); };
     thead.append(th);
   });
   const tb = el.createTBody();
@@ -347,6 +348,11 @@ function table(id, cols, rows, defKey) {
       const cl = [c.l ? 'l' : '', c.cls ? c.cls(r) : ''].join(' ').trim(); if (cl) td.className = cl;
     });
   });
+  if (foot) {
+    const tr = el.createTFoot().insertRow();
+    cols.forEach(c => { const td = tr.insertCell(); const v = foot[c.k]; td.textContent = c.chip ? '' : (v == null ? '' : (c.f || F.id)(v));
+      const cl = [c.l ? 'l' : '', c.cls && v != null ? c.cls(foot) : ''].join(' ').trim(); if (cl) td.className = cl; });
+  }
 }
 
 // ---------- tooltip ----------
@@ -406,7 +412,11 @@ function render() {
   vend.forEach(v => { const tg = targetOf(v.vendor); if (!tg) return; v.target = tg[1]; v.target_pct = r1((fullGmv.get(v.vendor) || 0) / tg[1] * 100); });
   table('vendors', [{k: 'vendor', t: 'Dostawca'}, {k: 'gmv', t: 'GMV', f: F.zl}, {k: 'gain', t: 'Gain', f: F.zl}, {k: 'gain_share', t: 'Udział w gainie', f: F.pct}, {k: 'gain_rate', t: 'Gain rate', f: F.pct, cls: r => grCls(r.gain_rate)},
     {k: 'tx', t: 'Transakcje', f: F.n}, {k: 'discount', t: 'Rabat od reg.', f: F.pct}, {k: 'target', t: 'Cel GMV', f: F.zl},
-    {k: 'target_pct', t: 'Realizacja celu', f: F.pct, cls: r => r.target_pct == null ? '' : r.target_pct >= pace ? 'ok' : 'bad'}], vend, 'gmv');
+    {k: 'target_pct', t: 'Realizacja celu', f: F.pct, cls: r => r.target_pct == null ? '' : r.target_pct >= pace ? 'ok' : 'bad'}], vend, 'gmv', (() => {
+      const a = agg(rows), tgt = sum(VENDOR_TARGETS, x => x[1]);
+      const tgtGmv = sum([...fullGmv].filter(([v]) => targetOf(v)), ([, g]) => g);
+      return {vendor: 'Razem', ...a, gain_share: a.gain ? 100 : null, target: tgt, target_pct: r1(tgtGmv / tgt * 100)};
+    })());
 
   // grupy produktów
   const gids = groupBy(groups, g => g.group); const allIds = new Set(groups.map(g => String(g.product_id)));
