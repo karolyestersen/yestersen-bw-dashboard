@@ -1,7 +1,7 @@
 import json, sys
 o = 'out'
 tx = json.load(open(f'{o}/transactions.json'))['rows']
-keep = ['transaction_id','order_id','product_id','product','vendor','day','time','period','counted','sample','status','gmv','regular_price','gain','category','category2','category3','classification']
+keep = ['transaction_id','order_id','product_id','product','vendor','day','time','period','counted','sample','status','gmv','regular_price','gain','category','category2','category3','classification','returning']
 data = {'tx': [{k: r[k] for k in keep} for r in tx],
         'groups': json.load(open(f'{o}/product_groups.json'))['rows'],
         'ads': json.load(open(f'{o}/ads.json'))['rows'],

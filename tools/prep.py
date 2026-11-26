@@ -12,6 +12,7 @@ import csv, json, re, sys, os
 from datetime import datetime
 
 tx_path, ids_path, sub_path, out_dir = sys.argv[1:5]
+history_paths = sys.argv[5:]  # opcjonalnie: dłuższe raporty transakcji jako historia klientów
 os.makedirs(out_dir, exist_ok=True)
 CODE = open(os.path.abspath(__file__), encoding="utf-8").read()
 
@@ -35,6 +36,27 @@ def period_of(day):
         if a <= day <= b:
             return name
     return None
+
+
+# ---------- historia klientów (e-mail -> zamówienia) ----------
+# E-mail służy tylko do porównania i nie trafia do plików wyjściowych.
+# Zakupy gościa dostają w CMS nowe ID użytkownika, więc "Order count" ich nie łączy.
+history = {}
+for hp in [tx_path] + history_paths:
+    with open(hp, encoding="utf-8-sig", newline="") as f:
+        for r in csv.DictReader(f, delimiter=";"):
+            e = (r.get("Buyer's email") or "").strip().lower()
+            o = (r.get("Order ID") or "").strip()
+            if e and o:
+                history.setdefault(e, {})[o] = (r.get("Order paid date") or "").strip()
+
+
+def is_returning(r):
+    if num(r.get("Order count")) > 1:
+        return True
+    e = (r.get("Buyer's email") or "").strip().lower()
+    me, when = (r.get("Order ID") or "").strip(), (r.get("Order paid date") or "").strip()
+    return any(o != me and d and d < when for o, d in history.get(e, {}).items())
 
 
 # ---------- transakcje ----------
@@ -71,6 +93,7 @@ with open(tx_path, encoding="utf-8-sig", newline="") as f:
             "category2": re.sub(r"\s*\[\d+\]\s*$", "", (r.get("Product category level 2") or "").split("|")[0].strip()) or "(bez podkategorii)",
             "category3": re.sub(r"\s*\[\d+\]\s*$", "", (r.get("Product category level 3") or "").split("|")[0].strip()) or "(bez podkategorii)",
             "discount_code": (r.get("Discount code") or "").strip(),
+            "returning": is_returning(r),
             "b2b": (r.get("B2B") or "").strip() == "1",
         })
 

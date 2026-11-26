@@ -63,6 +63,9 @@ h2{font-size:17px;font-weight:600;margin:0 0 4px}
 .chead div:nth-child(3),.chead div:nth-child(4){text-align:right}
 .more{font:inherit;font-size:12.5px;margin-top:10px;background:none;border:0;color:var(--c0);cursor:pointer;text-decoration:underline;padding:0}
 @media (max-width:560px){.crow,.chead{grid-template-columns:minmax(100px,38%) 1fr 64px}.crow .track,.chead div:nth-child(2){display:none}}
+.nrrow{display:grid;grid-template-columns:90px 1fr;gap:10px;align-items:center;margin:6px 0;font-size:13px}
+.nrbar{display:flex;height:24px;border-radius:4px;overflow:hidden}
+.nrbar div{display:flex;align-items:center;padding:0 8px;color:#fff;font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden}
 .tw{overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
 th{text-align:right;font-weight:600;color:var(--muted);padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
@@ -132,6 +135,14 @@ Okres danych Sublime: <input type="date" id="subFrom"> – <input type="date" id
 <div class="card"><div class="lab">Transakcje (sztuki)</div><div class="big" id="k_tx">—</div><div class="note">w <span id="k_orders">—</span> zamówieniach, AOV <span id="k_aov">—</span></div></div>
 <div class="card"><div class="lab">Rabat od ceny regularnej</div><div class="big" id="k_disc">—</div></div>
 </div>
+</section>
+
+<section class="card" id="klienci">
+<h2>Nowi vs powracający klienci</h2>
+<p class="sub">Wybrany okres. Powracający = klient z wcześniejszym zamówieniem: wg licznika zamówień w CMS albo tego samego e-maila w historii transakcji (zakupy jako gość CMS liczy osobno, więc łączymy je po e-mailu). Klienci sprzed dostępnej historii mogą być liczeni jako nowi.</p>
+<div class="legend"><span><i class="sw" style="background:var(--c0)"></i>Nowi</span><span><i class="sw" style="background:var(--c1)"></i>Powracający</span></div>
+<div id="nr_bars"></div>
+<div class="tw" style="margin-top:14px"><table id="nr_table"></table></div>
 </section>
 
 <section class="card">
@@ -255,7 +266,12 @@ const periodOf = day => day >= CFG.START && day <= CFG.URO_END ? 'Urodziny' : da
 const stripCat = s => (s || '').split('|')[0].replace(/\s*\[\d+\]\s*$/, '').trim() || 'Brak';
 
 function normTx(rows) {
-  return objs(rows).filter(r => (r['Transaction ID'] || '').trim()).map(r => {
+  const all = objs(rows).filter(r => (r['Transaction ID'] || '').trim());
+  // e-mail tylko do porównania w przeglądarce, nie jest zapisywany
+  const hist = new Map(); all.forEach(r => { const e = (r["Buyer's email"] || '').trim().toLowerCase(); if (!e) return; if (!hist.has(e)) hist.set(e, new Map()); hist.get(e).set((r['Order ID'] || '').trim(), (r['Order paid date'] || '').trim()); });
+  const returning = r => { if (num(r['Order count']) > 1) return true; const h = hist.get((r["Buyer's email"] || '').trim().toLowerCase()); if (!h) return false;
+    const me = (r['Order ID'] || '').trim(), when = (r['Order paid date'] || '').trim(); return [...h].some(([o, d]) => o !== me && d && d < when); };
+  return all.map(r => {
     const day = (r['Order paid date'] || '').trim().slice(0, 10);
     const status = (r['Transaction status'] || '').trim();
     const returned = !!(r['Transaction return completed date'] || '').trim();
@@ -267,7 +283,7 @@ function normTx(rows) {
       counted: !/CANCEL|RETURN|REFUND|REJECT/i.test(status) && !returned && !!p && !SAMPLE_RE.test(r['Product name'] || ''), status,
       gmv: r2(price), regular_price: r2(reg > 0 ? reg : price), gain: r2(num(r['Total gain'])),
       category: stripCat(r['Product category level 1']), category2: stripCat(r['Product category level 2']).replace(/^Brak$/, '(bez podkategorii)'),
-      category3: stripCat(r['Product category level 3']).replace(/^Brak$/, '(bez podkategorii)'), classification: (r['Product classification'] || '').trim()};
+      category3: stripCat(r['Product category level 3']).replace(/^Brak$/, '(bez podkategorii)'), returning: returning(r), classification: (r['Product classification'] || '').trim()};
   });
 }
 function normGroups(rows) {
@@ -397,6 +413,21 @@ function render() {
   set('k_period', PERIOD === 'Razem' ? 'Razem (17.11–1.12)' : PERIOD);
   set('k_gmv', F.short(k.gmv)); set('k_gain', F.short(k.gain)); set('k_gr', F.pct(k.gain_rate), grCls(k.gain_rate));
   set('k_tx', F.n(k.tx)); set('k_orders', F.n(k.orders)); set('k_aov', F.zl(k.orders ? k.gmv / k.orders : null)); set('k_disc', F.pct(k.discount));
+
+  // nowi vs powracający
+  { const segs = [['Nowi', rows.filter(r => !r.returning)], ['Powracający', rows.filter(r => r.returning)]].map(([s, rs]) => ({seg: s, ...agg(rs)}));
+    const T = {tx: sum(segs, s => s.tx), gmv: sum(segs, s => s.gmv), gain: sum(segs, s => s.gain)};
+    segs.forEach(s => { s.tx_share = T.tx ? r1(s.tx / T.tx * 100) : null; s.gmv_share = T.gmv ? r1(s.gmv / T.gmv * 100) : null; s.gain_share = T.gain ? r1(s.gain / T.gain * 100) : null; s.aov = s.orders ? r2(s.gmv / s.orders) : null; });
+    $('nr_bars').replaceChildren(...[['Transakcje', 'tx_share'], ['GMV', 'gmv_share'], ['Gain', 'gain_share']].map(([lab, k]) => {
+      const row = document.createElement('div'); row.className = 'nrrow';
+      const l = document.createElement('div'); l.textContent = lab;
+      const bar = document.createElement('div'); bar.className = 'nrbar';
+      segs.forEach((s, i) => { const d = document.createElement('div'); d.style.flex = String(Math.max(s[k] || 0, 0.0001)); d.style.background = i ? 'var(--c1)' : 'var(--c0)'; d.textContent = s[k] ? F.pct(s[k]) : '';
+        d.onmousemove = ev => showTip(ev, `${s.seg}: ${lab} ${F.pct(s[k])}`); d.onmouseleave = hideTip; bar.append(d); });
+      row.append(l, bar); return row; }));
+    table('nr_table', [{k: 'seg', t: 'Klienci'}, {k: 'tx', t: 'Transakcje', f: F.n}, {k: 'tx_share', t: 'Udział', f: F.pct}, {k: 'gmv', t: 'GMV', f: F.zl}, {k: 'gmv_share', t: 'Udział', f: F.pct},
+      {k: 'gain', t: 'Gain', f: F.zl}, {k: 'gain_share', t: 'Udział', f: F.pct}, {k: 'gain_rate', t: 'Gain rate', f: F.pct, cls: r => grCls(r.gain_rate)}, {k: 'orders', t: 'Zamówienia', f: F.n}, {k: 'aov', t: 'AOV zamówienia', f: F.zl}], segs, 'gmv');
+  }
 
   // dzienny
   const dd = Array.from({length: CFG.DAYS}, (_, i) => { const day = new Date(Date.parse(CFG.START) + i * 864e5).toISOString().slice(0, 10); return {day, ...agg(tx.filter(r => r.counted && r.day === day))}; });
