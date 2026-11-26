@@ -56,6 +56,7 @@ with open(tx_path, encoding="utf-8-sig", newline="") as f:
             "product": r["Product name"].strip(),
             "vendor": r["Vendor name"].strip(),
             "day": day,
+            "time": paid[11:16],
             "period": period_of(day) or "Poza okresem",
             "sample": bool(SAMPLE_RE.search(r["Product name"] or "")),
             "counted": (not EXCLUDED_STATUS.search(status)) and not returned and period_of(day) is not None and not SAMPLE_RE.search(r["Product name"] or ""),

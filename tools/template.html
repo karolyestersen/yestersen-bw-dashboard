@@ -262,7 +262,7 @@ function normTx(rows) {
     const price = num(r['Product price']), reg = num(r['Product current regular price']);
     const p = periodOf(day);
     return {transaction_id: r['Transaction ID'].trim(), order_id: (r['Order ID'] || '').trim(), product_id: (r['Product ID'] || '').trim(),
-      product: (r['Product name'] || '').trim(), vendor: (r['Vendor name'] || '').trim(), day, period: p || 'Poza okresem',
+      product: (r['Product name'] || '').trim(), vendor: (r['Vendor name'] || '').trim(), day, time: (r['Order paid date'] || '').trim().slice(11, 16), period: p || 'Poza okresem',
       sample: SAMPLE_RE.test(r['Product name'] || ''),
       counted: !/CANCEL|RETURN|REFUND|REJECT/i.test(status) && !returned && !!p && !SAMPLE_RE.test(r['Product name'] || ''), status,
       gmv: r2(price), regular_price: r2(reg > 0 ? reg : price), gain: r2(num(r['Total gain'])),
@@ -379,12 +379,15 @@ function render() {
   const all = agg(tx.filter(r => inP(r, 'Razem')));
   const inRange = tx.filter(r => r.period !== 'Poza okresem').map(r => r.day).sort();
   const last = inRange[inRange.length - 1] || CFG.START;
-  const days = Math.min(CFG.DAYS, Math.round((Date.parse(last) - Date.parse(CFG.START)) / 864e5) + 1);
+  // ostatni dzień w danych liczony częściowo – do godziny ostatniej opłaconej transakcji
+  const lastT = tx.filter(r => r.day === last).map(r => r.time || '').sort().pop() || '';
+  const frac = /^\d\d:\d\d$/.test(lastT) ? (Number(lastT.slice(0, 2)) * 60 + Number(lastT.slice(3))) / 1440 : 1;
+  const days = Math.min(CFG.DAYS, Math.round((Date.parse(last) - Date.parse(CFG.START)) / 864e5) + frac);
   const gp = all.gmv / CFG.TARGET_GMV * 100, pace = days / CFG.DAYS * 100, left = Math.max(0, CFG.TARGET_GMV - all.gmv);
   const need = CFG.DAYS - days > 0 ? left / (CFG.DAYS - days) : left;
   set('l_gmv', F.short(all.gmv)); set('l_pct', F.pct(gp), gp >= pace ? 'ok' : 'bad'); set('l_gr', F.pct(all.gain_rate), grCls(all.gain_rate));
   set('l_last', last.slice(8, 10) + '.' + last.slice(5, 7));
-  set('t_gmv', F.short(all.gmv)); set('t_pct', F.pct(gp)); set('t_days', F.n(days)); set('t_pace', F.pct(pace));
+  set('t_gmv', F.short(all.gmv)); set('t_pct', F.pct(gp)); set('t_days', NF1.format(days)); set('t_pace', F.pct(pace));
   set('t_left', F.short(left)); set('t_need', F.short(need)); set('t_gr', F.pct(all.gain_rate), grCls(all.gain_rate)); set('t_gain', F.short(all.gain));
   $('t_fill').style.width = Math.min(100, gp) + '%'; $('t_fill').style.background = gp >= pace ? 'var(--ok)' : 'var(--c0)';
   $('t_mark').style.left = 'calc(' + Math.min(100, pace) + '% - 1px)';
